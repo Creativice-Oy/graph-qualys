@@ -33,6 +33,7 @@ import {
 } from './constants';
 import { HostAssetTargets } from './types';
 import { Host } from '../../provider/client/types/vmpc/listHosts';
+import { Scan } from '../../provider/client/types/vmpc/listSCANS';
 
 /**
  * Creates a mapped relationship between a Service and Host. This should not be
@@ -572,6 +573,36 @@ export function createHostEntity(data: Host) {
           data.LAST_VULN_SCAN_DATETIME,
         ),
         lastVmScannedDate: parseTimePropertyValue(data.LAST_VM_SCANNED_DATE),
+      },
+    },
+  });
+}
+
+export function getAssessmentKey(id: string): string {
+  return `qualys_assessment:${id}`;
+}
+
+export function createAsessmentEntity(data: Scan) {
+  return createIntegrationEntity({
+    entityData: {
+      source: data,
+      assign: {
+        _type: VmdrEntities.ASSESSMENT._type,
+        _key: getAssessmentKey(data.REF),
+        _class: VmdrEntities.ASSESSMENT._class,
+        ref: data.REF,
+        type: data.TYPE,
+        name: data.TITLE,
+        userLogin: data.USER_LOGIN,
+        launchDatetime: parseTimePropertyValue(data.LAUNCH_DATETIME),
+        duration: data.DURATION,
+        processingPriority: data.PROCESSING_PRIORITY,
+        processed: data.PROCESSED,
+        statusState: data.STATUS.STATE,
+        target: data.TARGET,
+        category: 'Vulnerability Scan',
+        summary: data.TITLE,
+        internal: true,
       },
     },
   });

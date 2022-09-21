@@ -9,6 +9,8 @@ import { createQualysAPIClient } from './provider';
 import { STEP_FETCH_ACCOUNT } from './steps/account';
 import { STEP_FETCH_SERVICES } from './steps/services';
 import {
+  STEP_FETCH_ASSESSMENTS,
+  STEP_FETCH_HOSTS,
   STEP_FETCH_SCANNED_HOST_DETAILS,
   STEP_FETCH_SCANNED_HOST_FINDINGS,
   STEP_FETCH_SCANNED_HOST_IDS,
@@ -26,6 +28,9 @@ const REQUIRED_PROPERTIES = [
   'qualysPassword',
   'qualysApiUrl',
 ];
+
+// Temporary flag
+const IS_NEW = true;
 
 export async function validateInvocation(
   context: IntegrationExecutionContext<UserIntegrationConfig>,
@@ -67,8 +72,6 @@ export async function validateInvocation(
   instance.config = calculatedConfig;
 }
 
-const isNew = true;
-
 export function getStepStartStates(
   context: IntegrationExecutionContext<UserIntegrationConfig>,
 ): StepStartStates {
@@ -80,28 +83,32 @@ export function getStepStartStates(
       disabled: false,
     },
     [STEP_FETCH_SERVICES]: {
-      disabled: isNew,
+      disabled: IS_NEW,
     },
     [STEP_FETCH_SCANNED_WEBAPPS]: {
       disabled: !ingestWebAppScans,
     },
     [STEP_FETCH_SCANNED_WEBAPP_FINDINGS]: {
-      disabled: isNew,
+      disabled: IS_NEW,
     },
     [STEP_FETCH_SCANNED_HOST_IDS]: {
-      disabled: isNew,
+      disabled: IS_NEW,
     },
     [STEP_FETCH_SCANNED_HOST_DETAILS]: {
-      disabled: isNew,
+      disabled: IS_NEW,
     },
     [STEP_FETCH_SCANNED_HOST_FINDINGS]: {
-      disabled: isNew,
+      disabled: IS_NEW,
     },
     [STEP_FETCH_FINDING_VULNS]: {
-      disabled: isNew,
+      disabled: IS_NEW,
     },
-    ['fetch-hosts']: {
-      disabled: !isNew,
+
+    [STEP_FETCH_HOSTS]: {
+      disabled: !IS_NEW,
+    },
+    [STEP_FETCH_ASSESSMENTS]: {
+      disabled: !IS_NEW,
     },
   };
 }

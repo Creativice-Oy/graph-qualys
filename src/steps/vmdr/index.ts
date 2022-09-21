@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid';
 import {
   createDirectRelationship,
   Entity,
+  getRawData,
   IntegrationInfoEventName,
   IntegrationStep,
   IntegrationStepExecutionContext,
@@ -27,6 +28,7 @@ import {
   DATA_HOST_ASSET_TARGETS,
   DATA_HOST_VULNERABILITY_FINDING_KEYS,
   DATA_SCANNED_HOST_IDS,
+  STEP_FETCH_ASSESSMENTS,
   STEP_FETCH_HOSTS,
   STEP_FETCH_SCANNED_HOST_DETAILS,
   STEP_FETCH_SCANNED_HOST_FINDINGS,
@@ -36,17 +38,20 @@ import {
   VmdrRelationships,
 } from './constants';
 import {
+  createAsessmentEntity,
   createHostEntity,
   createHostFindingEntity,
   createServiceScansDiscoveredHostAssetRelationship,
   createServiceScansEC2HostAssetRelationship,
   createServiceScansGCPHostAssetRelationship,
+  getAssessmentKey,
   getEC2HostAssetArn,
   getGCPHostProjectId,
   getHostAssetTargets,
 } from './converters';
 import { HostAssetTargetsMap } from './types';
 import { DATA_ACCOUNT_ENTITY, STEP_FETCH_ACCOUNT } from '../account';
+import { Host } from '../../provider/client/types/vmpc/listHosts';
 
 /**
  * This is the number of pages that must be traversed before producing a more
@@ -404,6 +409,40 @@ export async function fetchHosts({
   });
 }
 
+export async function fetchAssessments({
+  logger,
+  instance,
+  jobState,
+}: IntegrationStepExecutionContext<QualysIntegrationConfig>) {
+  const apiClient = createQualysAPIClient(logger, instance.config);
+
+  await jobState.iterateEntities(
+    { _type: VmdrEntities.HOST._type },
+    async (hostEntity) => {
+      const host = getRawData<Host>(hostEntity);
+
+      if (!host) logger.info(`Can't get raw data for ${hostEntity._key}`);
+      else {
+        await apiClient.iterateHostScans(host.IP, async (scan) => {
+          const assessmentKey = getAssessmentKey(scan.REF);
+
+          const assessmentEntity = createAsessmentEntity(scan);
+          if (!jobState.hasKey(assessmentKey))
+            await jobState.addEntity(assessmentEntity);
+
+          await jobState.addRelationship(
+            createDirectRelationship({
+              _class: RelationshipClass.HAS,
+              from: hostEntity,
+              to: assessmentEntity,
+            }),
+          );
+        });
+      }
+    },
+  );
+}
+
 function shouldIncludeResultsForVulnerability(
   config: CalculatedIntegrationConfig,
   detection: HostDetection,
@@ -457,5 +496,13 @@ export const hostDetectionSteps: IntegrationStep<QualysIntegrationConfig>[] = [
     relationships: [VmdrRelationships.ACCOUNT_HAS_HOST],
     dependsOn: [STEP_FETCH_ACCOUNT],
     executionHandler: fetchHosts,
+  },
+  {
+    id: STEP_FETCH_ASSESSMENTS,
+    name: 'Fetch Assessments',
+    entities: [VmdrEntities.ASSESSMENT],
+    relationships: [VmdrRelationships.HOST_HAS_ASSESSMENT],
+    dependsOn: [STEP_FETCH_HOSTS],
+    executionHandler: fetchAssessments,
   },
 ];

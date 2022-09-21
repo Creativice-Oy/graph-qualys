@@ -11,6 +11,7 @@ import { ENTITY_TYPE_QUALYS_ACCOUNT } from '../account';
 import { ENTITY_TYPE_SERVICE_VMDR } from '../services';
 
 export const STEP_FETCH_HOSTS = 'fetch-hosts';
+export const STEP_FETCH_ASSESSMENTS = 'fetch-assessments';
 export const STEP_FETCH_SCANNED_HOST_IDS = 'fetch-scanned-host-ids';
 export const STEP_FETCH_SCANNED_HOST_DETAILS = 'fetch-scanned-host-details';
 export const STEP_FETCH_SCANNED_HOST_FINDINGS = 'fetch-scanned-host-detections';
@@ -73,6 +74,14 @@ export const VmdrEntities: Record<string, StepEntityMetadata> = {
       enabled: true,
     },
   },
+  ASSESSMENT: {
+    _type: `qualys_assessment`,
+    _class: ['Assessment'],
+    resourceName: 'Assessment',
+    indexMetadata: {
+      enabled: true,
+    },
+  },
 };
 
 export const VmdrRelationships: Record<string, StepRelationshipMetadata> = {
@@ -91,6 +100,15 @@ export const VmdrRelationships: Record<string, StepRelationshipMetadata> = {
     _class: RelationshipClass.HAS,
     sourceType: ENTITY_TYPE_QUALYS_ACCOUNT,
     targetType: VmdrEntities.HOST._type,
+    indexMetadata: {
+      enabled: true,
+    },
+  },
+  HOST_HAS_ASSESSMENT: {
+    _type: `qualys_host_has_assessment`,
+    _class: RelationshipClass.HAS,
+    sourceType: VmdrEntities.HOST._type,
+    targetType: VmdrEntities.ASSESSMENT._type,
     indexMetadata: {
       enabled: true,
     },

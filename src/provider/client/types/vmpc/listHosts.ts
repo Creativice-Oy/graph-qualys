@@ -20,11 +20,11 @@ export type Host = {
 };
 
 export type HostResponse = {
-  HOST_LIST_OUTPUT: {
-    RESPONSE: {
+  HOST_LIST_OUTPUT?: {
+    RESPONSE?: {
       DATETIME: string;
-      HOST_LIST: {
-        HOST: Host[];
+      HOST_LIST?: {
+        HOST: Host[] | Host;
       };
     };
   };

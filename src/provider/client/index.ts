@@ -41,6 +41,7 @@ import {
 } from './util';
 import { buildServiceRequestBody } from './was/util';
 import { Host, HostResponse } from './types/vmpc/listHosts';
+import { Scan, ScanResponse } from './types/vmpc/listSCANS';
 
 export * from './types';
 
@@ -653,29 +654,37 @@ export class QualysAPIClient {
     );
 
     const resJson = await parseXMLResponse<HostResponse>(response);
-    if (resJson)
-      for (const host of resJson.HOST_LIST_OUTPUT.RESPONSE.HOST_LIST.HOST)
-        await iteratee(host);
+    if (resJson.HOST_LIST_OUTPUT?.RESPONSE?.HOST_LIST) {
+      const hostList = resJson.HOST_LIST_OUTPUT?.RESPONSE?.HOST_LIST.HOST;
+      if (Array.isArray(hostList))
+        for (const host of hostList) await iteratee(host);
+      else await iteratee(hostList);
+    }
   }
 
-  // public async iterateScansTest(): Promise<void> {
-  //   const endpoint = '/api/2.0/fo/scan/';
-  //   const response = await this.executeAuthenticatedAPIRequest(
-  //     this.qualysUrl(endpoint, {
-  //       action: 'list',
-  //       launched_before_datetime: '2022-09-19',
-  //       launched_after_datetime: '2021-09-19',
-  //       show_ags: 1,
-  //       show_op: 1,
-  //       // truncation_limit:
-  //       //   options?.pagination?.limit || DEFAULT_HOST_IDS_PAGE_SIZE,
-  //     }),
-  //     { method: 'GET' },
-  //   );
+  public async iterateHostScans(
+    target: string,
+    iteratee: ResourceIteratee<Scan>,
+  ): Promise<void> {
+    const endpoint = '/api/2.0/fo/scan/';
+    const response = await this.executeAuthenticatedAPIRequest(
+      this.qualysUrl(endpoint, {
+        action: 'list',
+        launched_before_datetime: '2022-09-19',
+        launched_after_datetime: '2021-09-19',
+        target,
+      }),
+      { method: 'GET' },
+    );
 
-  //   const json = await parseXMLResponse(response);
-  //   // console.log(JSON.stringify(json, null, 2));
-  // }
+    const resJson = await parseXMLResponse<ScanResponse>(response);
+    if (resJson.SCAN_LIST_OUTPUT?.RESPONSE?.SCAN_LIST) {
+      const scanList = resJson.SCAN_LIST_OUTPUT.RESPONSE.SCAN_LIST.SCAN;
+      if (Array.isArray(scanList))
+        for (const scan of scanList) await iteratee(scan);
+      else await iteratee(scanList);
+    }
+  }
 
   // public async iterateScanReportTest(): Promise<void> {
   //   const endpoint = '/api/2.0/fo/scan/';
