@@ -10,6 +10,7 @@ import { STEP_FETCH_ACCOUNT } from './steps/account';
 import { STEP_FETCH_SERVICES } from './steps/services';
 import {
   STEP_FETCH_ASSESSMENTS,
+  STEP_FETCH_FINDINGS,
   STEP_FETCH_HOSTS,
   STEP_FETCH_SCANNED_HOST_DETAILS,
   STEP_FETCH_SCANNED_HOST_FINDINGS,
@@ -108,6 +109,9 @@ export function getStepStartStates(
       disabled: !IS_NEW,
     },
     [STEP_FETCH_ASSESSMENTS]: {
+      disabled: !IS_NEW,
+    },
+    [STEP_FETCH_FINDINGS]: {
       disabled: !IS_NEW,
     },
   };

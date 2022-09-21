@@ -42,6 +42,7 @@ import {
 import { buildServiceRequestBody } from './was/util';
 import { Host, HostResponse } from './types/vmpc/listHosts';
 import { Scan, ScanResponse } from './types/vmpc/listSCANS';
+import { ScanFinding, ScanResult } from './types/vmpc/listScanResults';
 
 export * from './types';
 
@@ -653,9 +654,9 @@ export class QualysAPIClient {
       { method: 'GET' },
     );
 
-    const resJson = await parseXMLResponse<HostResponse>(response);
-    if (resJson.HOST_LIST_OUTPUT?.RESPONSE?.HOST_LIST) {
-      const hostList = resJson.HOST_LIST_OUTPUT?.RESPONSE?.HOST_LIST.HOST;
+    const results = await parseXMLResponse<HostResponse>(response);
+    if (results.HOST_LIST_OUTPUT?.RESPONSE?.HOST_LIST) {
+      const hostList = results.HOST_LIST_OUTPUT?.RESPONSE?.HOST_LIST.HOST;
       if (Array.isArray(hostList))
         for (const host of hostList) await iteratee(host);
       else await iteratee(hostList);
@@ -677,39 +678,35 @@ export class QualysAPIClient {
       { method: 'GET' },
     );
 
-    const resJson = await parseXMLResponse<ScanResponse>(response);
-    if (resJson.SCAN_LIST_OUTPUT?.RESPONSE?.SCAN_LIST) {
-      const scanList = resJson.SCAN_LIST_OUTPUT.RESPONSE.SCAN_LIST.SCAN;
+    const results = await parseXMLResponse<ScanResponse>(response);
+    if (results.SCAN_LIST_OUTPUT?.RESPONSE?.SCAN_LIST) {
+      const scanList = results.SCAN_LIST_OUTPUT.RESPONSE.SCAN_LIST.SCAN;
       if (Array.isArray(scanList))
         for (const scan of scanList) await iteratee(scan);
       else await iteratee(scanList);
     }
   }
 
-  // public async iterateScanReportTest(): Promise<void> {
-  //   const endpoint = '/api/2.0/fo/scan/';
-  //   const response = await this.executeAuthenticatedAPIRequest(
-  //     this.qualysUrl(endpoint, {
-  //       action: 'fetch',
-  //       scan_ref: 'scan/1652144123.98191',
-  //       output_format: 'json_extended',
-  //       mode: 'brief',
-  //       // truncation_limit:
-  //       //   options?.pagination?.limit || DEFAULT_HOST_IDS_PAGE_SIZE,
-  //     }),
-  //     { method: 'GET' },
-  //   );
+  public async iterateScanResults(
+    scanRef: string,
+    iteratee: ResourceIteratee<ScanFinding>,
+  ): Promise<void> {
+    const endpoint = '/api/2.0/fo/scan/';
+    const response = await this.executeAuthenticatedAPIRequest(
+      this.qualysUrl(endpoint, {
+        action: 'fetch',
+        scan_ref: scanRef,
+        output_format: 'json_extended',
+        mode: 'brief',
+      }),
+      { method: 'GET' },
+    );
 
-  //   console.log(
-  //     (await response.json()).map((r) => ({
-  //       qid: r.qid,
-  //       ip: r.ip,
-  //       title: r.title,
-  //     })),
-  //   );
-  //   // const json = await parseXMLResponse(response);
-  //   // console.log(JSON.stringify(json, null, 2));
-  // }
+    const results: ScanResult = await response.json();
+    for (const result of results)
+      if (Object.keys(result).includes('results'))
+        await iteratee(result as ScanFinding);
+  }
 
   /**
    * Iterate details of hosts known to the Asset Manager.

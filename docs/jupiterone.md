@@ -125,6 +125,7 @@ The following entities are created:
 | ----------------------- | ------------------------------ | --------------- |
 | Account                 | `qualys_account`               | `Account`       |
 | Assessment              | `qualys_assessment`            | `Assessment`    |
+| Finding                 | `qualys_finding`               | `Finding`       |
 | Host                    | `qualys_host`                  | `Host`          |
 | Host Detection          | `qualys_host_finding`          | `Finding`       |
 | Vulnerability Manager   | `qualys_vulnerability_manager` | `Service`       |
@@ -140,6 +141,7 @@ The following relationships are created:
 | `qualys_account`         | **HAS**               | `qualys_host`                  |
 | `qualys_account`         | **HAS**               | `qualys_vulnerability_manager` |
 | `qualys_account`         | **HAS**               | `qualys_web_app_scanner`       |
+| `qualys_assessment`      | **IDENTIFIED**        | `qualys_finding`               |
 | `qualys_host_finding`    | **IS**                | `cve`                          |
 | `qualys_host_finding`    | **IS**                | `qualys_vuln`                  |
 | `qualys_host`            | **HAS**               | `qualys_assessment`            |

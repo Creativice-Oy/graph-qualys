@@ -12,6 +12,7 @@ import { ENTITY_TYPE_SERVICE_VMDR } from '../services';
 
 export const STEP_FETCH_HOSTS = 'fetch-hosts';
 export const STEP_FETCH_ASSESSMENTS = 'fetch-assessments';
+export const STEP_FETCH_FINDINGS = 'fetch-findings';
 export const STEP_FETCH_SCANNED_HOST_IDS = 'fetch-scanned-host-ids';
 export const STEP_FETCH_SCANNED_HOST_DETAILS = 'fetch-scanned-host-details';
 export const STEP_FETCH_SCANNED_HOST_FINDINGS = 'fetch-scanned-host-detections';
@@ -82,6 +83,14 @@ export const VmdrEntities: Record<string, StepEntityMetadata> = {
       enabled: true,
     },
   },
+  FINDING: {
+    _type: `qualys_finding`,
+    _class: ['Finding'],
+    resourceName: 'Finding',
+    indexMetadata: {
+      enabled: true,
+    },
+  },
 };
 
 export const VmdrRelationships: Record<string, StepRelationshipMetadata> = {
@@ -109,6 +118,15 @@ export const VmdrRelationships: Record<string, StepRelationshipMetadata> = {
     _class: RelationshipClass.HAS,
     sourceType: VmdrEntities.HOST._type,
     targetType: VmdrEntities.ASSESSMENT._type,
+    indexMetadata: {
+      enabled: true,
+    },
+  },
+  ASSESSMENT_IDENTIFIED_FINDING: {
+    _type: `qualys_assessment_identified_finding`,
+    _class: RelationshipClass.IDENTIFIED,
+    sourceType: VmdrEntities.ASSESSMENT._type,
+    targetType: VmdrEntities.FINDING._type,
     indexMetadata: {
       enabled: true,
     },
