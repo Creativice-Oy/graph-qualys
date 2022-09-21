@@ -40,6 +40,7 @@ import {
   toArray,
 } from './util';
 import { buildServiceRequestBody } from './was/util';
+import { Host, HostResponse } from './types/vmpc/listHosts';
 
 export * from './types';
 
@@ -639,6 +640,67 @@ export class QualysAPIClient {
       await iteratee(hostIdsResponse.hostIds);
     }
   }
+
+  public async iterateHosts(iteratee: ResourceIteratee<Host>): Promise<void> {
+    const endpoint = '/api/2.0/fo/asset/host/';
+    const response = await this.executeAuthenticatedAPIRequest(
+      this.qualysUrl(endpoint, {
+        action: 'list',
+        details: 'All',
+        truncation_limit: DEFAULT_HOST_IDS_PAGE_SIZE,
+      }),
+      { method: 'GET' },
+    );
+
+    const resJson = await parseXMLResponse<HostResponse>(response);
+    if (resJson)
+      for (const host of resJson.HOST_LIST_OUTPUT.RESPONSE.HOST_LIST.HOST)
+        await iteratee(host);
+  }
+
+  // public async iterateScansTest(): Promise<void> {
+  //   const endpoint = '/api/2.0/fo/scan/';
+  //   const response = await this.executeAuthenticatedAPIRequest(
+  //     this.qualysUrl(endpoint, {
+  //       action: 'list',
+  //       launched_before_datetime: '2022-09-19',
+  //       launched_after_datetime: '2021-09-19',
+  //       show_ags: 1,
+  //       show_op: 1,
+  //       // truncation_limit:
+  //       //   options?.pagination?.limit || DEFAULT_HOST_IDS_PAGE_SIZE,
+  //     }),
+  //     { method: 'GET' },
+  //   );
+
+  //   const json = await parseXMLResponse(response);
+  //   // console.log(JSON.stringify(json, null, 2));
+  // }
+
+  // public async iterateScanReportTest(): Promise<void> {
+  //   const endpoint = '/api/2.0/fo/scan/';
+  //   const response = await this.executeAuthenticatedAPIRequest(
+  //     this.qualysUrl(endpoint, {
+  //       action: 'fetch',
+  //       scan_ref: 'scan/1652144123.98191',
+  //       output_format: 'json_extended',
+  //       mode: 'brief',
+  //       // truncation_limit:
+  //       //   options?.pagination?.limit || DEFAULT_HOST_IDS_PAGE_SIZE,
+  //     }),
+  //     { method: 'GET' },
+  //   );
+
+  //   console.log(
+  //     (await response.json()).map((r) => ({
+  //       qid: r.qid,
+  //       ip: r.ip,
+  //       title: r.title,
+  //     })),
+  //   );
+  //   // const json = await parseXMLResponse(response);
+  //   // console.log(JSON.stringify(json, null, 2));
+  // }
 
   /**
    * Iterate details of hosts known to the Asset Manager.

@@ -124,6 +124,7 @@ The following entities are created:
 | Resources               | Entity `_type`                 | Entity `_class` |
 | ----------------------- | ------------------------------ | --------------- |
 | Account                 | `qualys_account`               | `Account`       |
+| Host                    | `qualys_host`                  | `Host`          |
 | Host Detection          | `qualys_host_finding`          | `Finding`       |
 | Vulnerability Manager   | `qualys_vulnerability_manager` | `Service`       |
 | Web App Finding         | `qualys_web_app_finding`       | `Finding`       |
@@ -135,6 +136,7 @@ The following relationships are created:
 
 | Source Entity `_type`    | Relationship `_class` | Target Entity `_type`          |
 | ------------------------ | --------------------- | ------------------------------ |
+| `qualys_account`         | **HAS**               | `qualys_host`                  |
 | `qualys_account`         | **HAS**               | `qualys_vulnerability_manager` |
 | `qualys_account`         | **HAS**               | `qualys_web_app_scanner`       |
 | `qualys_host_finding`    | **IS**                | `cve`                          |

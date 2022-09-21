@@ -6,11 +6,9 @@ import {
   StepMappedRelationshipMetadata,
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
-import { ENTITY_TYPE_QUALYS_ACCOUNT } from '../account';
 
 import { ENTITY_TYPE_SERVICE_VMDR } from '../services';
 
-export const STEP_FETCH_HOSTS = 'fetch-hosts';
 export const STEP_FETCH_SCANNED_HOST_IDS = 'fetch-scanned-host-ids';
 export const STEP_FETCH_SCANNED_HOST_DETAILS = 'fetch-scanned-host-details';
 export const STEP_FETCH_SCANNED_HOST_FINDINGS = 'fetch-scanned-host-detections';
@@ -65,14 +63,6 @@ export const VmdrEntities: Record<string, StepEntityMetadata> = {
       enabled: true,
     },
   },
-  HOST: {
-    _type: `qualys_host`,
-    _class: ['Host'],
-    resourceName: 'Host',
-    indexMetadata: {
-      enabled: true,
-    },
-  },
 };
 
 export const VmdrRelationships: Record<string, StepRelationshipMetadata> = {
@@ -82,15 +72,6 @@ export const VmdrRelationships: Record<string, StepRelationshipMetadata> = {
     sourceType: ENTITY_TYPE_SERVICE_VMDR,
     targetType: ENTITY_TYPE_HOST_FINDING,
     partial: true,
-    indexMetadata: {
-      enabled: true,
-    },
-  },
-  ACCOUNT_HAS_HOST: {
-    _type: `qualys_account_has_host`,
-    _class: RelationshipClass.HAS,
-    sourceType: ENTITY_TYPE_QUALYS_ACCOUNT,
-    targetType: VmdrEntities.HOST._type,
     indexMetadata: {
       enabled: true,
     },

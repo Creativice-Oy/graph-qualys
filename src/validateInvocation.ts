@@ -67,6 +67,8 @@ export async function validateInvocation(
   instance.config = calculatedConfig;
 }
 
+const isNew = true;
+
 export function getStepStartStates(
   context: IntegrationExecutionContext<UserIntegrationConfig>,
 ): StepStartStates {
@@ -78,25 +80,28 @@ export function getStepStartStates(
       disabled: false,
     },
     [STEP_FETCH_SERVICES]: {
-      disabled: false,
+      disabled: isNew,
     },
     [STEP_FETCH_SCANNED_WEBAPPS]: {
       disabled: !ingestWebAppScans,
     },
     [STEP_FETCH_SCANNED_WEBAPP_FINDINGS]: {
-      disabled: false,
+      disabled: isNew,
     },
     [STEP_FETCH_SCANNED_HOST_IDS]: {
-      disabled: false,
+      disabled: isNew,
     },
     [STEP_FETCH_SCANNED_HOST_DETAILS]: {
-      disabled: false,
+      disabled: isNew,
     },
     [STEP_FETCH_SCANNED_HOST_FINDINGS]: {
-      disabled: false,
+      disabled: isNew,
     },
     [STEP_FETCH_FINDING_VULNS]: {
-      disabled: false,
+      disabled: isNew,
+    },
+    ['fetch-hosts']: {
+      disabled: !isNew,
     },
   };
 }
