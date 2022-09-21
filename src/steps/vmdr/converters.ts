@@ -551,13 +551,17 @@ export function getHostAssetDetails(host: assets.HostAsset) {
   };
 }
 
+export function getHostKey(id: string): string {
+  return `qualys_host:${id}`;
+}
+
 export function createHostEntity(data: Host) {
   return createIntegrationEntity({
     entityData: {
       source: data,
       assign: {
         _type: VmdrEntities.HOST._type,
-        _key: `qualys_host:${data.IP}`,
+        _key: getHostKey(data.IP),
         _class: VmdrEntities.HOST._class,
         id: data.ID.toString(),
         ip: data.IP,

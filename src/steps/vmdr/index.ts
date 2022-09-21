@@ -28,6 +28,7 @@ import {
   DATA_HOST_ASSET_TARGETS,
   DATA_HOST_VULNERABILITY_FINDING_KEYS,
   DATA_SCANNED_HOST_IDS,
+  STEP_BUILD_HOST_FINDING_RELATIONSHIP,
   STEP_FETCH_ASSESSMENTS,
   STEP_FETCH_FINDINGS,
   STEP_FETCH_HOSTS,
@@ -51,11 +52,13 @@ import {
   getFindingKey,
   getGCPHostProjectId,
   getHostAssetTargets,
+  getHostKey,
 } from './converters';
 import { HostAssetTargetsMap } from './types';
 import { DATA_ACCOUNT_ENTITY, STEP_FETCH_ACCOUNT } from '../account';
 import { Host } from '../../provider/client/types/vmpc/listHosts';
 import { Scan } from '../../provider/client/types/vmpc/listSCANS';
+import { ScanFinding } from '../../provider/client/types/vmpc/listScanResults';
 
 /**
  * This is the number of pages that must be traversed before producing a more
@@ -482,6 +485,35 @@ export async function fetchFindings({
   );
 }
 
+export async function buildHostFindingRelationship({
+  logger,
+  instance,
+  jobState,
+}: IntegrationStepExecutionContext<QualysIntegrationConfig>) {
+  await jobState.iterateEntities(
+    { _type: VmdrEntities.FINDING._type },
+    async (findingEntity) => {
+      const finding = getRawData<ScanFinding>(findingEntity);
+
+      if (!finding) logger.info(`Can't get raw data for ${findingEntity._key}`);
+      else {
+        const hostEntity = await jobState.findEntity(getHostKey(finding.ip));
+
+        if (hostEntity) {
+          const hostFindingRelationship = createDirectRelationship({
+            _class: RelationshipClass.HAS,
+            from: hostEntity,
+            to: findingEntity,
+          });
+
+          if (!(await jobState.hasKey(hostFindingRelationship._key)))
+            await jobState.addRelationship(hostFindingRelationship);
+        }
+      }
+    },
+  );
+}
+
 function shouldIncludeResultsForVulnerability(
   config: CalculatedIntegrationConfig,
   detection: HostDetection,
@@ -551,5 +583,13 @@ export const hostDetectionSteps: IntegrationStep<QualysIntegrationConfig>[] = [
     relationships: [VmdrRelationships.ASSESSMENT_IDENTIFIED_FINDING],
     dependsOn: [STEP_FETCH_ASSESSMENTS],
     executionHandler: fetchFindings,
+  },
+  {
+    id: STEP_BUILD_HOST_FINDING_RELATIONSHIP,
+    name: 'Build Host and Finding Relationship',
+    entities: [],
+    relationships: [VmdrRelationships.HOST_HAS_FINDING],
+    dependsOn: [STEP_FETCH_HOSTS, STEP_FETCH_FINDINGS],
+    executionHandler: buildHostFindingRelationship,
   },
 ];

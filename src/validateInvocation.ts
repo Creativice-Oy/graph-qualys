@@ -9,6 +9,7 @@ import { createQualysAPIClient } from './provider';
 import { STEP_FETCH_ACCOUNT } from './steps/account';
 import { STEP_FETCH_SERVICES } from './steps/services';
 import {
+  STEP_BUILD_HOST_FINDING_RELATIONSHIP,
   STEP_FETCH_ASSESSMENTS,
   STEP_FETCH_FINDINGS,
   STEP_FETCH_HOSTS,
@@ -112,6 +113,9 @@ export function getStepStartStates(
       disabled: !IS_NEW,
     },
     [STEP_FETCH_FINDINGS]: {
+      disabled: !IS_NEW,
+    },
+    [STEP_BUILD_HOST_FINDING_RELATIONSHIP]: {
       disabled: !IS_NEW,
     },
   };

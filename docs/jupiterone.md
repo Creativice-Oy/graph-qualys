@@ -145,6 +145,7 @@ The following relationships are created:
 | `qualys_host_finding`    | **IS**                | `cve`                          |
 | `qualys_host_finding`    | **IS**                | `qualys_vuln`                  |
 | `qualys_host`            | **HAS**               | `qualys_assessment`            |
+| `qualys_host`            | **HAS**               | `qualys_finding`               |
 | `qualys_web_app_finding` | **IS**                | `cve`                          |
 | `qualys_web_app_finding` | **IS**                | `qualys_vuln`                  |
 | `qualys_web_app_scanner` | **IDENTIFIED**        | `qualys_web_app_finding`       |
