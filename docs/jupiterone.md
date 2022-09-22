@@ -127,6 +127,8 @@ The following entities are created:
 | Assessment              | `qualys_assessment`            | `Assessment`    |
 | Finding                 | `qualys_finding`               | `Finding`       |
 | Host                    | `qualys_host`                  | `Host`          |
+| Host Detection          | `qualys_host_finding`          | `Finding`       |
+| Scanner                 | `qualys_scanner`               | `Scanner`       |
 | Vulnerability Manager   | `qualys_vulnerability_manager` | `Service`       |
 | Web App Finding         | `qualys_web_app_finding`       | `Finding`       |
 | Web Application Scanner | `qualys_web_app_scanner`       | `Service`       |
@@ -135,26 +137,32 @@ The following entities are created:
 
 The following relationships are created:
 
-| Source Entity `_type`          | Relationship `_class` | Target Entity `_type`          |
-| ------------------------------ | --------------------- | ------------------------------ |
-| `qualys_account`               | **HAS**               | `qualys_host`                  |
-| `qualys_account`               | **HAS**               | `qualys_vulnerability_manager` |
-| `qualys_account`               | **HAS**               | `qualys_web_app_scanner`       |
-| `qualys_assessment`            | **IDENTIFIED**        | `qualys_finding`               |
-| `qualys_host`                  | **HAS**               | `qualys_assessment`            |
-| `qualys_host`                  | **HAS**               | `qualys_finding`               |
-| `qualys_vulnerability_manager` | **PERFORMED**         | `qualys_assessment`            |
-| `qualys_web_app_scanner`       | **IDENTIFIED**        | `qualys_web_app_finding`       |
-| `qualys_web_app_scanner`       | **SCANS**             | `web_app`                      |
+| Source Entity `_type`    | Relationship `_class` | Target Entity `_type`          |
+| ------------------------ | --------------------- | ------------------------------ |
+| `qualys_account`         | **HAS**               | `qualys_host`                  |
+| `qualys_account`         | **HAS**               | `qualys_scanner`               |
+| `qualys_account`         | **HAS**               | `qualys_vulnerability_manager` |
+| `qualys_account`         | **HAS**               | `qualys_web_app_scanner`       |
+| `qualys_assessment`      | **IDENTIFIED**        | `qualys_finding`               |
+| `qualys_host_finding`    | **IS**                | `cve`                          |
+| `qualys_host_finding`    | **IS**                | `qualys_vuln`                  |
+| `qualys_host`            | **HAS**               | `qualys_assessment`            |
+| `qualys_host`            | **HAS**               | `qualys_finding`               |
+| `qualys_scanner`         | **PERFORMED**         | `qualys_assessment`            |
+| `qualys_web_app_finding` | **IS**                | `cve`                          |
+| `qualys_web_app_finding` | **IS**                | `qualys_vuln`                  |
+| `qualys_web_app_scanner` | **IDENTIFIED**        | `qualys_web_app_finding`       |
+| `qualys_web_app_scanner` | **SCANS**             | `web_app`                      |
 
 ### Mapped Relationships
 
 The following mapped relationships are created:
 
-| Source Entity `_type` | Relationship `_class` | Target Entity `_type`       | Direction |
-| --------------------- | --------------------- | --------------------------- | --------- |
-| `qualys_host`         | **IS**                | `*aws_instance*`            | FORWARD   |
-| `qualys_host`         | **IS**                | `*google_compute_instance*` | FORWARD   |
+| Source Entity `_type`          | Relationship `_class` | Target Entity `_type`       | Direction |
+| ------------------------------ | --------------------- | --------------------------- | --------- |
+| `qualys_vulnerability_manager` | **SCANS**             | `*aws_instance*`            | FORWARD   |
+| `qualys_vulnerability_manager` | **SCANS**             | `*discovered_host*`         | FORWARD   |
+| `qualys_vulnerability_manager` | **SCANS**             | `*google_compute_instance*` | FORWARD   |
 
 <!--
 ********************************************************************************
