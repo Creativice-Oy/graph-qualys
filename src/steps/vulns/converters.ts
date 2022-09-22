@@ -13,55 +13,54 @@ import { vmpc } from '../../provider/client';
 import { ScanFinding } from '../../provider/client/types/vmpc/listScanResults';
 import { Scan } from '../../provider/client/types/vmpc/listScans';
 import { CveList } from '../../provider/client/types/vmpc/listVulnerabilities';
-import { ENTITY_TYPE_HOST_FINDING } from '../vmdr/constants';
 import {
   // ENTITY_TYPE_CVE_VULNERABILITY,
   ENTITY_TYPE_QUALYS_VULNERABILITY,
   VulnEntities,
 } from './constants';
 
-/**
- * Creates N mapped relationships, one for each `TargetEntityProperties`
- * provided.
- *
- * @param findingEntity the Entity representing the host detection Finding
- * @param targetEntityProperties an Array of `TargetEntityProperties`
- * representing each vulnerability associated with the Finding
- */
-export function createFindingVulnerabilityMappedRelationships(
-  findingKey: string,
-  targetEntityProperties: TargetEntityProperties[],
-): { relationships: MappedRelationship[]; duplicates: MappedRelationship[] } {
-  const seenRelationshipKeys = new Set<string>();
-  const duplicates: MappedRelationship[] = [];
-  const relationships: MappedRelationship[] = [];
+// /**
+//  * Creates N mapped relationships, one for each `TargetEntityProperties`
+//  * provided.
+//  *
+//  * @param findingEntity the Entity representing the host detection Finding
+//  * @param targetEntityProperties an Array of `TargetEntityProperties`
+//  * representing each vulnerability associated with the Finding
+//  */
+// export function createFindingVulnerabilityMappedRelationships(
+//   findingKey: string,
+//   targetEntityProperties: TargetEntityProperties[],
+// ): { relationships: MappedRelationship[]; duplicates: MappedRelationship[] } {
+//   const seenRelationshipKeys = new Set<string>();
+//   const duplicates: MappedRelationship[] = [];
+//   const relationships: MappedRelationship[] = [];
 
-  for (const targetEntity of targetEntityProperties) {
-    const relationship = createMappedRelationship({
-      _class: RelationshipClass.IS,
-      _type: generateRelationshipType(
-        RelationshipClass.IS,
-        ENTITY_TYPE_HOST_FINDING,
-        targetEntity._type!,
-      ),
-      _mapping: {
-        relationshipDirection: RelationshipDirection.FORWARD,
-        sourceEntityKey: findingKey,
-        targetFilterKeys: [['_type', '_key']],
-        targetEntity,
-      },
-    });
+//   for (const targetEntity of targetEntityProperties) {
+//     const relationship = createMappedRelationship({
+//       _class: RelationshipClass.IS,
+//       _type: generateRelationshipType(
+//         RelationshipClass.IS,
+//         ENTITY_TYPE_HOST_FINDING,
+//         targetEntity._type!,
+//       ),
+//       _mapping: {
+//         relationshipDirection: RelationshipDirection.FORWARD,
+//         sourceEntityKey: findingKey,
+//         targetFilterKeys: [['_type', '_key']],
+//         targetEntity,
+//       },
+//     });
 
-    if (seenRelationshipKeys.has(relationship._key)) {
-      duplicates.push(relationship);
-      continue;
-    }
+//     if (seenRelationshipKeys.has(relationship._key)) {
+//       duplicates.push(relationship);
+//       continue;
+//     }
 
-    relationships.push(relationship);
-    seenRelationshipKeys.add(relationship._key);
-  }
-  return { relationships, duplicates };
-}
+//     relationships.push(relationship);
+//     seenRelationshipKeys.add(relationship._key);
+//   }
+//   return { relationships, duplicates };
+// }
 
 export function getAssessmentKey(id: string): string {
   return `qualys_assessment:${id}`;

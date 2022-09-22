@@ -8,18 +8,12 @@ import { calculateConfig } from './calculateConfig';
 import { createQualysAPIClient } from './provider';
 import { STEP_FETCH_ACCOUNT } from './steps/account';
 import { STEP_FETCH_SERVICES } from './steps/services';
-import {
-  STEP_FETCH_HOSTS,
-  STEP_FETCH_SCANNED_HOST_DETAILS,
-  STEP_FETCH_SCANNED_HOST_FINDINGS,
-  STEP_FETCH_SCANNED_HOST_IDS,
-} from './steps/vmdr/constants';
+import { Steps } from './steps/vmdr/constants';
 import {
   STEP_BUILD_HOST_FINDING_RELATIONSHIP,
   STEP_FETCH_ASSESSMENTS,
   STEP_FETCH_FINDINGS,
   STEP_FETCH_FINDING_VULNS,
-  STEP_FETCH_SCANNER,
 } from './steps/vulns/constants';
 import {
   STEP_FETCH_SCANNED_WEBAPPS,
@@ -88,41 +82,29 @@ export function getStepStartStates(
       disabled: false,
     },
     [STEP_FETCH_SERVICES]: {
-      disabled: IS_NEW,
+      disabled: false,
     },
     [STEP_FETCH_SCANNED_WEBAPPS]: {
       disabled: !ingestWebAppScans,
     },
     [STEP_FETCH_SCANNED_WEBAPP_FINDINGS]: {
-      disabled: IS_NEW,
-    },
-    [STEP_FETCH_SCANNED_HOST_IDS]: {
-      disabled: IS_NEW,
-    },
-    [STEP_FETCH_SCANNED_HOST_DETAILS]: {
-      disabled: IS_NEW,
-    },
-    [STEP_FETCH_SCANNED_HOST_FINDINGS]: {
-      disabled: IS_NEW,
-    },
-    [STEP_FETCH_FINDING_VULNS]: {
-      disabled: IS_NEW,
+      disabled: !ingestWebAppScans,
     },
 
-    [STEP_FETCH_HOSTS]: {
-      disabled: !IS_NEW,
+    [Steps.HOSTS]: {
+      disabled: false,
+    },
+    [Steps.BUILD_HOST_MAPPED_RELATIONSHIP]: {
+      disabled: false,
     },
     [STEP_FETCH_ASSESSMENTS]: {
-      disabled: !IS_NEW,
+      disabled: false,
     },
     [STEP_FETCH_FINDINGS]: {
-      disabled: !IS_NEW,
+      disabled: false,
     },
     [STEP_BUILD_HOST_FINDING_RELATIONSHIP]: {
-      disabled: !IS_NEW,
-    },
-    [STEP_FETCH_SCANNER]: {
-      disabled: !IS_NEW,
+      disabled: false,
     },
   };
 }

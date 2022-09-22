@@ -2,7 +2,6 @@ import { v4 as uuid } from 'uuid';
 
 import {
   createDirectRelationship,
-  createIntegrationEntity,
   Entity,
   getRawData,
   IntegrationStep,
@@ -18,26 +17,20 @@ import {
   SerializedVulnerabilityFindingKeys,
   VulnerabilityFindingKeysCollector,
 } from '../utils';
-import {
-  DATA_HOST_VULNERABILITY_FINDING_KEYS,
-  STEP_FETCH_HOSTS,
-  VmdrEntities,
-} from '../vmdr/constants';
+import { Steps, VmdrEntities } from '../vmdr/constants';
 import { DATA_WEBAPP_VULNERABILITY_FINDING_KEYS } from '../was/constants';
 import {
-  SERVICE_ENTITY_DATA_KEY,
   STEP_BUILD_HOST_FINDING_RELATIONSHIP,
   STEP_FETCH_ASSESSMENTS,
   STEP_FETCH_FINDINGS,
   STEP_FETCH_FINDING_VULNS,
-  STEP_FETCH_SCANNER,
   VulnEntities,
   VulnRelationships,
 } from './constants';
 import {
   createAsessmentEntity,
   createFindingEntity,
-  createFindingVulnerabilityMappedRelationships,
+  // createFindingVulnerabilityMappedRelationships,
   createVulnerabilityTargetEntities,
   getAssessmentKey,
   getFindingKey,
@@ -46,7 +39,7 @@ import { Host } from '../../provider/client/types/vmpc/listHosts';
 import { Scan } from '../../provider/client/types/vmpc/listSCANS';
 import { ScanFinding } from '../../provider/client/types/vmpc/listScanResults';
 import { getHostKey } from '../vmdr/converters';
-import { DATA_ACCOUNT_ENTITY, STEP_FETCH_ACCOUNT } from '../account';
+import { DATA_VMDR_SERVICE_ENTITY, STEP_FETCH_SERVICES } from '../services';
 
 /**
  * This is the number of vulnerabilities that must be traversed before producing
@@ -70,104 +63,104 @@ const VULNERABILTIES_LOG_FREQUENCY = 500;
  *
  * @see `createVulnerabilityTargetEntities`
  */
-export async function fetchFindingVulnerabilities({
-  logger,
-  instance,
-  jobState,
-}: IntegrationStepExecutionContext<QualysIntegrationConfig>) {
-  const qualysHost = getQualysHost(instance.config.qualysApiUrl);
-  const apiClient = createQualysAPIClient(logger, instance.config);
+// export async function fetchFindingVulnerabilities({
+//   logger,
+//   instance,
+//   jobState,
+// }: IntegrationStepExecutionContext<QualysIntegrationConfig>) {
+//   const qualysHost = getQualysHost(instance.config.qualysApiUrl);
+//   const apiClient = createQualysAPIClient(logger, instance.config);
 
-  const vulnerabiltyFindingKeysCollector = new VulnerabilityFindingKeysCollector();
-  await loadVulnerabilityFindingKeys(
-    vulnerabiltyFindingKeysCollector,
-    jobState,
-  );
+//   const vulnerabiltyFindingKeysCollector = new VulnerabilityFindingKeysCollector();
+//   await loadVulnerabilityFindingKeys(
+//     vulnerabiltyFindingKeysCollector,
+//     jobState,
+//   );
 
-  const errorCorrelationId = uuid();
+//   const errorCorrelationId = uuid();
 
-  let totalVulnerabilitiesProcessed = 0;
-  let totalFindingsProcessed = 0;
-  let totalPageErrors = 0;
+//   let totalVulnerabilitiesProcessed = 0;
+//   let totalFindingsProcessed = 0;
+//   let totalPageErrors = 0;
 
-  await apiClient.iterateVulnerabilities(
-    vulnerabiltyFindingKeysCollector.allQids(),
-    async (vuln) => {
-      const targetEntities = createVulnerabilityTargetEntities(
-        qualysHost,
-        vuln,
-      );
+//   await apiClient.iterateVulnerabilities(
+//     vulnerabiltyFindingKeysCollector.allQids(),
+//     async (vuln) => {
+//       const targetEntities = createVulnerabilityTargetEntities(
+//         qualysHost,
+//         vuln,
+//       );
 
-      const vulnFindingKeys = vulnerabiltyFindingKeysCollector.getVulnerabiltyFindingKeys(
-        vuln.QID!,
-      );
+//       const vulnFindingKeys = vulnerabiltyFindingKeysCollector.getVulnerabiltyFindingKeys(
+//         vuln.QID!,
+//       );
 
-      if (vulnFindingKeys) {
-        for (const findingKey of vulnFindingKeys) {
-          if (!jobState.hasKey(findingKey)) {
-            logger.warn(
-              { qid: vuln.QID, findingKey },
-              'Previous ingestion steps failed to store Finding in job state for _key',
-            );
-          } else {
-            const {
-              relationships,
-              duplicates,
-            } = createFindingVulnerabilityMappedRelationships(
-              findingKey,
-              targetEntities,
-            );
+//       if (vulnFindingKeys) {
+//         for (const findingKey of vulnFindingKeys) {
+//           if (!jobState.hasKey(findingKey)) {
+//             logger.warn(
+//               { qid: vuln.QID, findingKey },
+//               'Previous ingestion steps failed to store Finding in job state for _key',
+//             );
+//           } else {
+//             const {
+//               relationships,
+//               duplicates,
+//             } = createFindingVulnerabilityMappedRelationships(
+//               findingKey,
+//               targetEntities,
+//             );
 
-            await jobState.addRelationships(relationships);
+//             await jobState.addRelationships(relationships);
 
-            if (duplicates.length > 0) {
-              logger.warn(
-                { qid: vuln.QID, duplicateKeys: duplicates.map((e) => e._key) },
-                'Finding appears to have duplicate related vulnerabilities, need to create a better Finding._key?',
-              );
-            }
-          }
+//             if (duplicates.length > 0) {
+//               logger.warn(
+//                 { qid: vuln.QID, duplicateKeys: duplicates.map((e) => e._key) },
+//                 'Finding appears to have duplicate related vulnerabilities, need to create a better Finding._key?',
+//               );
+//             }
+//           }
 
-          totalFindingsProcessed++;
-        }
-      } else {
-        logger.warn(
-          { qid: vuln.QID },
-          'Previous ingestion steps failed to associate Finding _keys with vulnerability',
-        );
-      }
+//           totalFindingsProcessed++;
+//         }
+//       } else {
+//         logger.warn(
+//           { qid: vuln.QID },
+//           'Previous ingestion steps failed to associate Finding _keys with vulnerability',
+//         );
+//       }
 
-      totalVulnerabilitiesProcessed++;
+//       totalVulnerabilitiesProcessed++;
 
-      // This code is hot and we don't want to be logging all of the time.
-      // We largely reduce the number of logs by ensuring that we only log every
-      // so often.
-      const shouldLogPageVerbose =
-        totalVulnerabilitiesProcessed % VULNERABILTIES_LOG_FREQUENCY === 0 &&
-        totalVulnerabilitiesProcessed !== 0;
+//       // This code is hot and we don't want to be logging all of the time.
+//       // We largely reduce the number of logs by ensuring that we only log every
+//       // so often.
+//       const shouldLogPageVerbose =
+//         totalVulnerabilitiesProcessed % VULNERABILTIES_LOG_FREQUENCY === 0 &&
+//         totalVulnerabilitiesProcessed !== 0;
 
-      if (shouldLogPageVerbose) {
-        logger.info(
-          {
-            totalVulnerabilitiesProcessed,
-            totalFindingsProcessed,
-            totalPageErrors,
-          },
-          'Processing vulnerabilities...',
-        );
-      }
-    },
-    {
-      onRequestError(pageIds, err) {
-        totalPageErrors++;
-        logger.error(
-          { pageIds, err, errorCorrelationId, totalPageErrors },
-          'Error processing page of vulnerabilities',
-        );
-      },
-    },
-  );
-}
+//       if (shouldLogPageVerbose) {
+//         logger.info(
+//           {
+//             totalVulnerabilitiesProcessed,
+//             totalFindingsProcessed,
+//             totalPageErrors,
+//           },
+//           'Processing vulnerabilities...',
+//         );
+//       }
+//     },
+//     {
+//       onRequestError(pageIds, err) {
+//         totalPageErrors++;
+//         logger.error(
+//           { pageIds, err, errorCorrelationId, totalPageErrors },
+//           'Error processing page of vulnerabilities',
+//         );
+//       },
+//     },
+//   );
+// }
 
 export async function fetchAssessments({
   logger,
@@ -176,7 +169,7 @@ export async function fetchAssessments({
 }: IntegrationStepExecutionContext<QualysIntegrationConfig>) {
   const apiClient = createQualysAPIClient(logger, instance.config);
   const scannerEntity = (await jobState.getData(
-    SERVICE_ENTITY_DATA_KEY,
+    DATA_VMDR_SERVICE_ENTITY,
   )) as Entity;
 
   await jobState.iterateEntities(
@@ -213,42 +206,6 @@ export async function fetchAssessments({
       }
     },
   );
-}
-
-export async function fetchService({
-  jobState,
-}: IntegrationStepExecutionContext<QualysIntegrationConfig>) {
-  const accountEntity = (await jobState.getData(DATA_ACCOUNT_ENTITY)) as Entity;
-
-  const service = {
-    name: 'Qualys Vulnerability Scanner',
-  };
-
-  const serviceEntity = createIntegrationEntity({
-    entityData: {
-      source: service,
-      assign: {
-        _key: `qualys_scanner:${service.name}`,
-        _type: VulnEntities.SCANNER._type,
-        _class: VulnEntities.SCANNER._class,
-        name: service.name,
-        displayName: service.name,
-        category: ['host'],
-      },
-    },
-  });
-
-  await Promise.all([
-    jobState.addEntity(serviceEntity),
-    jobState.setData(SERVICE_ENTITY_DATA_KEY, serviceEntity),
-    jobState.addRelationship(
-      createDirectRelationship({
-        _class: RelationshipClass.HAS,
-        from: accountEntity,
-        to: serviceEntity,
-      }),
-    ),
-  ]);
 }
 
 export async function fetchFindings({
@@ -316,27 +273,6 @@ export async function buildHostFindingRelationship({
 }
 
 /**
- * Answers a map of QID -> `Finding._key[]` from all steps that collected
- * Finding entities.
- *
- * The Finding ingestion steps will store a mapping of QID to each
- * `Finding._key` associated with the vulnerability. This allows
- * `STEP_FETCH_FINDING_VULNS` to know which vulnerabilities to fetch and to
- * which Finding entites to map relationships.
- */
-async function loadVulnerabilityFindingKeys(
-  collector: VulnerabilityFindingKeysCollector,
-  jobState: JobState,
-): Promise<void> {
-  for (const dataKey of [
-    DATA_WEBAPP_VULNERABILITY_FINDING_KEYS,
-    DATA_HOST_VULNERABILITY_FINDING_KEYS,
-  ]) {
-    collector.loadSerialized(await popFindingKeys(jobState, dataKey));
-  }
-}
-
-/**
  * Fetches from `jobState` and deserializes the map of QID -> `Finding._key[]`
  * identified by `dataKey`. The data will be removed from the `jobState` to free
  * up resources.
@@ -350,20 +286,20 @@ async function popFindingKeys(jobState: JobState, dataKey: string) {
 }
 
 export const vulnSteps: IntegrationStep<QualysIntegrationConfig>[] = [
-  {
-    id: STEP_FETCH_FINDING_VULNS,
-    name: 'Fetch Finding Vulnerability Details',
-    entities: [],
-    relationships: [
-      VulnRelationships.HOST_FINDING_QUALYS_VULN,
-      VulnRelationships.HOST_FINDING_CVE_VULN,
-      VulnRelationships.WEBAPP_FINDING_QUALYS_VULN,
-      VulnRelationships.WEBAPP_FINDING_CVE_VULN,
-    ],
-    dependsOn: [],
-    executionHandler: fetchFindingVulnerabilities,
-    dependencyGraphId: 'last',
-  },
+  // {
+  //   id: STEP_FETCH_FINDING_VULNS,
+  //   name: 'Fetch Finding Vulnerability Details',
+  //   entities: [],
+  //   relationships: [
+  //     VulnRelationships.HOST_FINDING_QUALYS_VULN,
+  //     VulnRelationships.HOST_FINDING_CVE_VULN,
+  //     VulnRelationships.WEBAPP_FINDING_QUALYS_VULN,
+  //     VulnRelationships.WEBAPP_FINDING_CVE_VULN,
+  //   ],
+  //   dependsOn: [],
+  //   executionHandler: fetchFindingVulnerabilities,
+  //   dependencyGraphId: 'last',
+  // },
   {
     id: STEP_FETCH_ASSESSMENTS,
     name: 'Fetch Assessments',
@@ -372,7 +308,7 @@ export const vulnSteps: IntegrationStep<QualysIntegrationConfig>[] = [
       VulnRelationships.HOST_HAS_ASSESSMENT,
       VulnRelationships.SCANNER_PERFORMED_ASSESSMENT,
     ],
-    dependsOn: [STEP_FETCH_HOSTS, STEP_FETCH_SCANNER],
+    dependsOn: [Steps.HOSTS, STEP_FETCH_SERVICES],
     executionHandler: fetchAssessments,
   },
   {
@@ -388,15 +324,7 @@ export const vulnSteps: IntegrationStep<QualysIntegrationConfig>[] = [
     name: 'Build Host and Finding Relationship',
     entities: [],
     relationships: [VulnRelationships.HOST_HAS_FINDING],
-    dependsOn: [STEP_FETCH_HOSTS, STEP_FETCH_FINDINGS],
+    dependsOn: [Steps.HOSTS, STEP_FETCH_FINDINGS],
     executionHandler: buildHostFindingRelationship,
-  },
-  {
-    id: STEP_FETCH_SCANNER,
-    name: 'Fetch Vulnerability Scanner',
-    entities: [VulnEntities.SCANNER],
-    relationships: [VulnRelationships.ACCOUNT_HAS_SCANNER],
-    dependsOn: [STEP_FETCH_ACCOUNT],
-    executionHandler: fetchService,
   },
 ];
