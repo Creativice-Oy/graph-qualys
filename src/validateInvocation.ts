@@ -19,6 +19,7 @@ import {
   STEP_FETCH_ASSESSMENTS,
   STEP_FETCH_FINDINGS,
   STEP_FETCH_FINDING_VULNS,
+  STEP_FETCH_SCANNER,
 } from './steps/vulns/constants';
 import {
   STEP_FETCH_SCANNED_WEBAPPS,
@@ -118,6 +119,9 @@ export function getStepStartStates(
       disabled: !IS_NEW,
     },
     [STEP_BUILD_HOST_FINDING_RELATIONSHIP]: {
+      disabled: !IS_NEW,
+    },
+    [STEP_FETCH_SCANNER]: {
       disabled: !IS_NEW,
     },
   };

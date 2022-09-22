@@ -2,6 +2,8 @@ import { v4 as uuid } from 'uuid';
 
 import {
   createDirectRelationship,
+  createIntegrationEntity,
+  Entity,
   getRawData,
   IntegrationStep,
   IntegrationStepExecutionContext,
@@ -23,10 +25,12 @@ import {
 } from '../vmdr/constants';
 import { DATA_WEBAPP_VULNERABILITY_FINDING_KEYS } from '../was/constants';
 import {
+  SERVICE_ENTITY_DATA_KEY,
   STEP_BUILD_HOST_FINDING_RELATIONSHIP,
   STEP_FETCH_ASSESSMENTS,
   STEP_FETCH_FINDINGS,
   STEP_FETCH_FINDING_VULNS,
+  STEP_FETCH_SCANNER,
   VulnEntities,
   VulnRelationships,
 } from './constants';
@@ -42,6 +46,7 @@ import { Host } from '../../provider/client/types/vmpc/listHosts';
 import { Scan } from '../../provider/client/types/vmpc/listSCANS';
 import { ScanFinding } from '../../provider/client/types/vmpc/listScanResults';
 import { getHostKey } from '../vmdr/converters';
+import { DATA_ACCOUNT_ENTITY, STEP_FETCH_ACCOUNT } from '../account';
 
 /**
  * This is the number of vulnerabilities that must be traversed before producing
@@ -170,6 +175,9 @@ export async function fetchAssessments({
   jobState,
 }: IntegrationStepExecutionContext<QualysIntegrationConfig>) {
   const apiClient = createQualysAPIClient(logger, instance.config);
+  const scannerEntity = (await jobState.getData(
+    SERVICE_ENTITY_DATA_KEY,
+  )) as Entity;
 
   await jobState.iterateEntities(
     { _type: VmdrEntities.HOST._type },
@@ -192,10 +200,55 @@ export async function fetchAssessments({
               to: assessmentEntity,
             }),
           );
+
+          const scannerAssessmentRelationship = createDirectRelationship({
+            _class: RelationshipClass.PERFORMED,
+            from: scannerEntity,
+            to: assessmentEntity,
+          });
+
+          if (!(await jobState.hasKey(scannerAssessmentRelationship._key)))
+            await jobState.addRelationship(scannerAssessmentRelationship);
         });
       }
     },
   );
+}
+
+export async function fetchService({
+  jobState,
+}: IntegrationStepExecutionContext<QualysIntegrationConfig>) {
+  const accountEntity = (await jobState.getData(DATA_ACCOUNT_ENTITY)) as Entity;
+
+  const service = {
+    name: 'Qualys Vulnerability Scanner',
+  };
+
+  const serviceEntity = createIntegrationEntity({
+    entityData: {
+      source: service,
+      assign: {
+        _key: `qualys_scanner:${service.name}`,
+        _type: VulnEntities.SCANNER._type,
+        _class: VulnEntities.SCANNER._class,
+        name: service.name,
+        displayName: service.name,
+        category: ['host'],
+      },
+    },
+  });
+
+  await Promise.all([
+    jobState.addEntity(serviceEntity),
+    jobState.setData(SERVICE_ENTITY_DATA_KEY, serviceEntity),
+    jobState.addRelationship(
+      createDirectRelationship({
+        _class: RelationshipClass.HAS,
+        from: accountEntity,
+        to: serviceEntity,
+      }),
+    ),
+  ]);
 }
 
 export async function fetchFindings({
@@ -315,8 +368,11 @@ export const vulnSteps: IntegrationStep<QualysIntegrationConfig>[] = [
     id: STEP_FETCH_ASSESSMENTS,
     name: 'Fetch Assessments',
     entities: [VulnEntities.ASSESSMENT],
-    relationships: [VulnRelationships.HOST_HAS_ASSESSMENT],
-    dependsOn: [STEP_FETCH_HOSTS],
+    relationships: [
+      VulnRelationships.HOST_HAS_ASSESSMENT,
+      VulnRelationships.SCANNER_PERFORMED_ASSESSMENT,
+    ],
+    dependsOn: [STEP_FETCH_HOSTS, STEP_FETCH_SCANNER],
     executionHandler: fetchAssessments,
   },
   {
@@ -334,5 +390,13 @@ export const vulnSteps: IntegrationStep<QualysIntegrationConfig>[] = [
     relationships: [VulnRelationships.HOST_HAS_FINDING],
     dependsOn: [STEP_FETCH_HOSTS, STEP_FETCH_FINDINGS],
     executionHandler: buildHostFindingRelationship,
+  },
+  {
+    id: STEP_FETCH_SCANNER,
+    name: 'Fetch Vulnerability Scanner',
+    entities: [VulnEntities.SCANNER],
+    relationships: [VulnRelationships.ACCOUNT_HAS_SCANNER],
+    dependsOn: [STEP_FETCH_ACCOUNT],
+    executionHandler: fetchService,
   },
 ];

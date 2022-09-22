@@ -128,6 +128,7 @@ The following entities are created:
 | Finding                 | `qualys_finding`               | `Finding`       |
 | Host                    | `qualys_host`                  | `Host`          |
 | Host Detection          | `qualys_host_finding`          | `Finding`       |
+| Scanner                 | `qualys_scanner`               | `Scanner`       |
 | Vulnerability Manager   | `qualys_vulnerability_manager` | `Service`       |
 | Web App Finding         | `qualys_web_app_finding`       | `Finding`       |
 | Web Application Scanner | `qualys_web_app_scanner`       | `Service`       |
@@ -139,6 +140,7 @@ The following relationships are created:
 | Source Entity `_type`    | Relationship `_class` | Target Entity `_type`          |
 | ------------------------ | --------------------- | ------------------------------ |
 | `qualys_account`         | **HAS**               | `qualys_host`                  |
+| `qualys_account`         | **HAS**               | `qualys_scanner`               |
 | `qualys_account`         | **HAS**               | `qualys_vulnerability_manager` |
 | `qualys_account`         | **HAS**               | `qualys_web_app_scanner`       |
 | `qualys_assessment`      | **IDENTIFIED**        | `qualys_finding`               |
@@ -146,6 +148,7 @@ The following relationships are created:
 | `qualys_host_finding`    | **IS**                | `qualys_vuln`                  |
 | `qualys_host`            | **HAS**               | `qualys_assessment`            |
 | `qualys_host`            | **HAS**               | `qualys_finding`               |
+| `qualys_scanner`         | **PERFORMED**         | `qualys_assessment`            |
 | `qualys_web_app_finding` | **IS**                | `cve`                          |
 | `qualys_web_app_finding` | **IS**                | `qualys_vuln`                  |
 | `qualys_web_app_scanner` | **IDENTIFIED**        | `qualys_web_app_finding`       |
