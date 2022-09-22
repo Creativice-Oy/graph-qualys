@@ -9,15 +9,17 @@ import { createQualysAPIClient } from './provider';
 import { STEP_FETCH_ACCOUNT } from './steps/account';
 import { STEP_FETCH_SERVICES } from './steps/services';
 import {
-  STEP_BUILD_HOST_FINDING_RELATIONSHIP,
-  STEP_FETCH_ASSESSMENTS,
-  STEP_FETCH_FINDINGS,
   STEP_FETCH_HOSTS,
   STEP_FETCH_SCANNED_HOST_DETAILS,
   STEP_FETCH_SCANNED_HOST_FINDINGS,
   STEP_FETCH_SCANNED_HOST_IDS,
 } from './steps/vmdr/constants';
-import { STEP_FETCH_FINDING_VULNS } from './steps/vulns/constants';
+import {
+  STEP_BUILD_HOST_FINDING_RELATIONSHIP,
+  STEP_FETCH_ASSESSMENTS,
+  STEP_FETCH_FINDINGS,
+  STEP_FETCH_FINDING_VULNS,
+} from './steps/vulns/constants';
 import {
   STEP_FETCH_SCANNED_WEBAPPS,
   STEP_FETCH_SCANNED_WEBAPP_FINDINGS,

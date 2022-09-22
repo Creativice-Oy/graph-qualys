@@ -11,13 +11,9 @@ import { ENTITY_TYPE_QUALYS_ACCOUNT } from '../account';
 import { ENTITY_TYPE_SERVICE_VMDR } from '../services';
 
 export const STEP_FETCH_HOSTS = 'fetch-hosts';
-export const STEP_FETCH_ASSESSMENTS = 'fetch-assessments';
-export const STEP_FETCH_FINDINGS = 'fetch-findings';
 export const STEP_FETCH_SCANNED_HOST_IDS = 'fetch-scanned-host-ids';
 export const STEP_FETCH_SCANNED_HOST_DETAILS = 'fetch-scanned-host-details';
 export const STEP_FETCH_SCANNED_HOST_FINDINGS = 'fetch-scanned-host-detections';
-export const STEP_BUILD_HOST_FINDING_RELATIONSHIP =
-  'build-host-finding-relationship';
 
 export const DATA_SCANNED_HOST_IDS = 'DATA_SCANNED_HOST_IDS';
 
@@ -111,33 +107,6 @@ export const VmdrRelationships: Record<string, StepRelationshipMetadata> = {
     _class: RelationshipClass.HAS,
     sourceType: ENTITY_TYPE_QUALYS_ACCOUNT,
     targetType: VmdrEntities.HOST._type,
-    indexMetadata: {
-      enabled: true,
-    },
-  },
-  HOST_HAS_ASSESSMENT: {
-    _type: `qualys_host_has_assessment`,
-    _class: RelationshipClass.HAS,
-    sourceType: VmdrEntities.HOST._type,
-    targetType: VmdrEntities.ASSESSMENT._type,
-    indexMetadata: {
-      enabled: true,
-    },
-  },
-  HOST_HAS_FINDING: {
-    _type: `qualys_host_has_finding`,
-    _class: RelationshipClass.HAS,
-    sourceType: VmdrEntities.HOST._type,
-    targetType: VmdrEntities.FINDING._type,
-    indexMetadata: {
-      enabled: true,
-    },
-  },
-  ASSESSMENT_IDENTIFIED_FINDING: {
-    _type: `qualys_assessment_identified_finding`,
-    _class: RelationshipClass.IDENTIFIED,
-    sourceType: VmdrEntities.ASSESSMENT._type,
-    targetType: VmdrEntities.FINDING._type,
     indexMetadata: {
       enabled: true,
     },

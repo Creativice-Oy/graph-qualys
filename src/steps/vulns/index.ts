@@ -1,9 +1,12 @@
 import { v4 as uuid } from 'uuid';
 
 import {
+  createDirectRelationship,
+  getRawData,
   IntegrationStep,
   IntegrationStepExecutionContext,
   JobState,
+  RelationshipClass,
 } from '@jupiterone/integration-sdk-core';
 
 import { createQualysAPIClient } from '../../provider';
@@ -13,13 +16,32 @@ import {
   SerializedVulnerabilityFindingKeys,
   VulnerabilityFindingKeysCollector,
 } from '../utils';
-import { DATA_HOST_VULNERABILITY_FINDING_KEYS } from '../vmdr/constants';
-import { DATA_WEBAPP_VULNERABILITY_FINDING_KEYS } from '../was/constants';
-import { STEP_FETCH_FINDING_VULNS, VulnRelationships } from './constants';
 import {
+  DATA_HOST_VULNERABILITY_FINDING_KEYS,
+  STEP_FETCH_HOSTS,
+  VmdrEntities,
+} from '../vmdr/constants';
+import { DATA_WEBAPP_VULNERABILITY_FINDING_KEYS } from '../was/constants';
+import {
+  STEP_BUILD_HOST_FINDING_RELATIONSHIP,
+  STEP_FETCH_ASSESSMENTS,
+  STEP_FETCH_FINDINGS,
+  STEP_FETCH_FINDING_VULNS,
+  VulnEntities,
+  VulnRelationships,
+} from './constants';
+import {
+  createAsessmentEntity,
+  createFindingEntity,
   createFindingVulnerabilityMappedRelationships,
   createVulnerabilityTargetEntities,
+  getAssessmentKey,
+  getFindingKey,
 } from './converters';
+import { Host } from '../../provider/client/types/vmpc/listHosts';
+import { Scan } from '../../provider/client/types/vmpc/listSCANS';
+import { ScanFinding } from '../../provider/client/types/vmpc/listScanResults';
+import { getHostKey } from '../vmdr/converters';
 
 /**
  * This is the number of vulnerabilities that must be traversed before producing
@@ -142,6 +164,104 @@ export async function fetchFindingVulnerabilities({
   );
 }
 
+export async function fetchAssessments({
+  logger,
+  instance,
+  jobState,
+}: IntegrationStepExecutionContext<QualysIntegrationConfig>) {
+  const apiClient = createQualysAPIClient(logger, instance.config);
+
+  await jobState.iterateEntities(
+    { _type: VmdrEntities.HOST._type },
+    async (hostEntity) => {
+      const host = getRawData<Host>(hostEntity);
+
+      if (!host) logger.info(`Can't get raw data for ${hostEntity._key}`);
+      else {
+        await apiClient.iterateHostScans(host.IP, async (scan) => {
+          const assessmentKey = getAssessmentKey(scan.REF);
+
+          const assessmentEntity = createAsessmentEntity(scan);
+          if (!(await jobState.hasKey(assessmentKey)))
+            await jobState.addEntity(assessmentEntity);
+
+          await jobState.addRelationship(
+            createDirectRelationship({
+              _class: RelationshipClass.HAS,
+              from: hostEntity,
+              to: assessmentEntity,
+            }),
+          );
+        });
+      }
+    },
+  );
+}
+
+export async function fetchFindings({
+  logger,
+  instance,
+  jobState,
+}: IntegrationStepExecutionContext<QualysIntegrationConfig>) {
+  const apiClient = createQualysAPIClient(logger, instance.config);
+
+  await jobState.iterateEntities(
+    { _type: VmdrEntities.ASSESSMENT._type },
+    async (assessmentEntity) => {
+      const scan = getRawData<Scan>(assessmentEntity);
+
+      if (!scan) logger.info(`Can't get raw data for ${assessmentEntity._key}`);
+      else {
+        await apiClient.iterateScanResults(scan.REF, async (finding) => {
+          const findingKey = getFindingKey(finding.qid.toString());
+
+          const findingEntity = createFindingEntity(finding);
+          if (!(await jobState.hasKey(findingKey)))
+            await jobState.addEntity(findingEntity);
+
+          const assessmentFindingRelationship = createDirectRelationship({
+            _class: RelationshipClass.IDENTIFIED,
+            from: assessmentEntity,
+            to: findingEntity,
+          });
+
+          if (!(await jobState.hasKey(assessmentFindingRelationship._key)))
+            await jobState.addRelationship(assessmentFindingRelationship);
+        });
+      }
+    },
+  );
+}
+
+export async function buildHostFindingRelationship({
+  logger,
+  instance,
+  jobState,
+}: IntegrationStepExecutionContext<QualysIntegrationConfig>) {
+  await jobState.iterateEntities(
+    { _type: VmdrEntities.FINDING._type },
+    async (findingEntity) => {
+      const finding = getRawData<ScanFinding>(findingEntity);
+
+      if (!finding) logger.info(`Can't get raw data for ${findingEntity._key}`);
+      else {
+        const hostEntity = await jobState.findEntity(getHostKey(finding.ip));
+
+        if (hostEntity) {
+          const hostFindingRelationship = createDirectRelationship({
+            _class: RelationshipClass.HAS,
+            from: hostEntity,
+            to: findingEntity,
+          });
+
+          if (!(await jobState.hasKey(hostFindingRelationship._key)))
+            await jobState.addRelationship(hostFindingRelationship);
+        }
+      }
+    },
+  );
+}
+
 /**
  * Answers a map of QID -> `Finding._key[]` from all steps that collected
  * Finding entities.
@@ -190,5 +310,29 @@ export const vulnSteps: IntegrationStep<QualysIntegrationConfig>[] = [
     dependsOn: [],
     executionHandler: fetchFindingVulnerabilities,
     dependencyGraphId: 'last',
+  },
+  {
+    id: STEP_FETCH_ASSESSMENTS,
+    name: 'Fetch Assessments',
+    entities: [VulnEntities.ASSESSMENT],
+    relationships: [VulnRelationships.HOST_HAS_ASSESSMENT],
+    dependsOn: [STEP_FETCH_HOSTS],
+    executionHandler: fetchAssessments,
+  },
+  {
+    id: STEP_FETCH_FINDINGS,
+    name: 'Fetch Findings',
+    entities: [VulnEntities.FINDING],
+    relationships: [VulnRelationships.ASSESSMENT_IDENTIFIED_FINDING],
+    dependsOn: [STEP_FETCH_ASSESSMENTS],
+    executionHandler: fetchFindings,
+  },
+  {
+    id: STEP_BUILD_HOST_FINDING_RELATIONSHIP,
+    name: 'Build Host and Finding Relationship',
+    entities: [],
+    relationships: [VulnRelationships.HOST_HAS_FINDING],
+    dependsOn: [STEP_FETCH_HOSTS, STEP_FETCH_FINDINGS],
+    executionHandler: buildHostFindingRelationship,
   },
 ];

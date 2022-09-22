@@ -1,13 +1,18 @@
 import {
   generateRelationshipType,
   RelationshipClass,
+  StepEntityMetadata,
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
 
-import { ENTITY_TYPE_HOST_FINDING } from '../vmdr/constants';
+import { ENTITY_TYPE_HOST_FINDING, VmdrEntities } from '../vmdr/constants';
 import { ENTITY_TYPE_WEBAPP_FINDING } from '../was/constants';
 
 export const STEP_FETCH_FINDING_VULNS = 'fetch-finding-vulns';
+export const STEP_FETCH_ASSESSMENTS = 'fetch-assessments';
+export const STEP_FETCH_FINDINGS = 'fetch-findings';
+export const STEP_BUILD_HOST_FINDING_RELATIONSHIP =
+  'build-host-finding-relationship';
 
 /**
  * The _type of Vulnerability when CVE is known.
@@ -39,6 +44,25 @@ export const MAPPED_RELATIONSHIP_TYPE_WEBAPP_FINDING_QUALYS_VULNERABILITY = gene
   ENTITY_TYPE_WEBAPP_FINDING,
   ENTITY_TYPE_QUALYS_VULNERABILITY,
 );
+
+export const VulnEntities: Record<string, StepEntityMetadata> = {
+  ASSESSMENT: {
+    _type: `qualys_assessment`,
+    _class: ['Assessment'],
+    resourceName: 'Assessment',
+    indexMetadata: {
+      enabled: true,
+    },
+  },
+  FINDING: {
+    _type: `qualys_finding`,
+    _class: ['Finding'],
+    resourceName: 'Finding',
+    indexMetadata: {
+      enabled: true,
+    },
+  },
+};
 
 export const VulnRelationships: Record<string, StepRelationshipMetadata> = {
   HOST_FINDING_QUALYS_VULN: {
@@ -77,6 +101,33 @@ export const VulnRelationships: Record<string, StepRelationshipMetadata> = {
     sourceType: ENTITY_TYPE_WEBAPP_FINDING,
     targetType: ENTITY_TYPE_CVE_VULNERABILITY,
     partial: true,
+    indexMetadata: {
+      enabled: true,
+    },
+  },
+  HOST_HAS_ASSESSMENT: {
+    _type: `qualys_host_has_assessment`,
+    _class: RelationshipClass.HAS,
+    sourceType: VmdrEntities.HOST._type,
+    targetType: VulnEntities.ASSESSMENT._type,
+    indexMetadata: {
+      enabled: true,
+    },
+  },
+  HOST_HAS_FINDING: {
+    _type: `qualys_host_has_finding`,
+    _class: RelationshipClass.HAS,
+    sourceType: VmdrEntities.HOST._type,
+    targetType: VulnEntities.FINDING._type,
+    indexMetadata: {
+      enabled: true,
+    },
+  },
+  ASSESSMENT_IDENTIFIED_FINDING: {
+    _type: `qualys_assessment_identified_finding`,
+    _class: RelationshipClass.IDENTIFIED,
+    sourceType: VulnEntities.ASSESSMENT._type,
+    targetType: VulnEntities.FINDING._type,
     indexMetadata: {
       enabled: true,
     },

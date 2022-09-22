@@ -1,18 +1,23 @@
 import {
+  createIntegrationEntity,
   createMappedRelationship,
   generateRelationshipType,
   MappedRelationship,
+  parseTimePropertyValue,
   RelationshipClass,
   RelationshipDirection,
   TargetEntityProperties,
 } from '@jupiterone/integration-sdk-core';
 
 import { vmpc } from '../../provider/client';
+import { ScanFinding } from '../../provider/client/types/vmpc/listScanResults';
+import { Scan } from '../../provider/client/types/vmpc/listScans';
 import { CveList } from '../../provider/client/types/vmpc/listVulnerabilities';
 import { ENTITY_TYPE_HOST_FINDING } from '../vmdr/constants';
 import {
   // ENTITY_TYPE_CVE_VULNERABILITY,
   ENTITY_TYPE_QUALYS_VULNERABILITY,
+  VulnEntities,
 } from './constants';
 
 /**
@@ -56,6 +61,81 @@ export function createFindingVulnerabilityMappedRelationships(
     seenRelationshipKeys.add(relationship._key);
   }
   return { relationships, duplicates };
+}
+
+export function getAssessmentKey(id: string): string {
+  return `qualys_assessment:${id}`;
+}
+
+export function createAsessmentEntity(data: Scan) {
+  return createIntegrationEntity({
+    entityData: {
+      source: data,
+      assign: {
+        _type: VulnEntities.ASSESSMENT._type,
+        _key: getAssessmentKey(data.REF),
+        _class: VulnEntities.ASSESSMENT._class,
+        ref: data.REF,
+        type: data.TYPE,
+        name: data.TITLE,
+        userLogin: data.USER_LOGIN,
+        launchDatetime: parseTimePropertyValue(data.LAUNCH_DATETIME),
+        duration: data.DURATION,
+        processingPriority: data.PROCESSING_PRIORITY,
+        processed: data.PROCESSED,
+        statusState: data.STATUS.STATE,
+        target: data.TARGET,
+        category: 'Vulnerability Scan',
+        summary: data.TITLE,
+        internal: true,
+      },
+    },
+  });
+}
+
+export function getFindingKey(id: string): string {
+  return `qualys_finding${id}`;
+}
+
+export function createFindingEntity(data: ScanFinding) {
+  return createIntegrationEntity({
+    entityData: {
+      source: data,
+      assign: {
+        _type: VulnEntities.FINDING._type,
+        _key: getFindingKey(data.qid.toString()),
+        _class: VulnEntities.FINDING._class,
+        name: data.title,
+        ip: data.ip,
+        dns: data.dns,
+        netbios: data.netbios,
+        os: data.os,
+        ipStatus: data.ip_status,
+        qid: data.qid,
+        title: data.title,
+        type: data.type,
+        severity: data.severity,
+        port: data.port,
+        protocol: data.protocol,
+        fqdn: data.fqdn,
+        ssl: data.ssl,
+        cveId: data.cve_id,
+        vendorReference: data.vendor_reference,
+        bugtraqId: data.bugtraq_id,
+        threat: data.threat,
+        impact: data.impact || undefined,
+        solution: data.solution,
+        associatedMalware: data.associated_malware,
+        results: data.results,
+        pciVuln: data.pci_vuln,
+        instance: data.instance,
+        category: data.category,
+        numericSeverity: parseInt(data.severity),
+        open: !!data.exploitability,
+        exploitability: parseInt(data.severity),
+      },
+    },
+  });
 }
 
 /**
