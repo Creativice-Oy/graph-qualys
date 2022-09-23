@@ -127,7 +127,7 @@ export const VulnMappedRelationships: Record<
   StepMappedRelationshipMetadata
 > = {
   HOST_HAS_FINDING: {
-    _type: `qualys_host_has_host_finding`,
+    _type: `mapping_source_has_qualys_host_finding`,
     _class: RelationshipClass.HAS,
     direction: RelationshipDirection.FORWARD,
     sourceType: VmdrEntities.HOST._type,
@@ -137,7 +137,7 @@ export const VulnMappedRelationships: Record<
     },
   },
   ASSESSMENT_IDENTIFIED_FINDING: {
-    _type: `qualys_assessment_identified_host_finding`,
+    _type: `mapping_source_identified_qualys_host_finding`,
     _class: RelationshipClass.IDENTIFIED,
     direction: RelationshipDirection.FORWARD,
     sourceType: VulnEntities.ASSESSMENT._type,

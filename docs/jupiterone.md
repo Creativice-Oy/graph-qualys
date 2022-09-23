@@ -155,8 +155,8 @@ The following mapped relationships are created:
 
 | Source Entity `_type` | Relationship `_class` | Target Entity `_type`       | Direction |
 | --------------------- | --------------------- | --------------------------- | --------- |
-| `qualys_assessment`   | **IDENTIFIED**        | `*qualys_host_finding*`     | FORWARD   |
 | `qualys_host`         | **HAS**               | `*qualys_host_finding*`     | FORWARD   |
+| `qualys_assessment`   | **IDENTIFIED**        | `*qualys_host_finding*`     | FORWARD   |
 | `qualys_host`         | **IS**                | `*aws_instance*`            | FORWARD   |
 | `qualys_host`         | **IS**                | `*discovered_host*`         | FORWARD   |
 | `qualys_host`         | **IS**                | `*google_compute_instance*` | FORWARD   |
