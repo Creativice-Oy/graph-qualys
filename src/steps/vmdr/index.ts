@@ -291,6 +291,9 @@ export async function fetchScannedHostFindings({
               : undefined,
             hostAssetTargets: hostAssetTargetsMap[host.ID!],
           });
+          console.log('================================');
+          console.log('finding ingest');
+          console.log(findingEntity);
           entities.push(findingEntity);
 
           if (findingEntity.ec2InstanceArn) {

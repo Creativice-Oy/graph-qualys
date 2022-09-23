@@ -1,7 +1,9 @@
 import {
   generateRelationshipType,
   RelationshipClass,
+  RelationshipDirection,
   StepEntityMetadata,
+  StepMappedRelationshipMetadata,
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
 import { ENTITY_TYPE_SERVICE_VMDR } from '../services';
@@ -126,20 +128,28 @@ export const VulnRelationships: Record<string, StepRelationshipMetadata> = {
       enabled: true,
     },
   },
+};
+
+export const VulnMappedRelationships: Record<
+  string,
+  StepMappedRelationshipMetadata
+> = {
   HOST_HAS_FINDING: {
-    _type: `qualys_host_has_finding`,
+    _type: `qualys_host_has_host_finding`,
     _class: RelationshipClass.HAS,
+    direction: RelationshipDirection.FORWARD,
     sourceType: VmdrEntities.HOST._type,
-    targetType: VulnEntities.FINDING._type,
+    targetType: ENTITY_TYPE_HOST_FINDING,
     indexMetadata: {
       enabled: true,
     },
   },
   ASSESSMENT_IDENTIFIED_FINDING: {
-    _type: `qualys_assessment_identified_finding`,
+    _type: `qualys_assessment_identified_host_finding`,
     _class: RelationshipClass.IDENTIFIED,
+    direction: RelationshipDirection.FORWARD,
     sourceType: VulnEntities.ASSESSMENT._type,
-    targetType: VulnEntities.FINDING._type,
+    targetType: ENTITY_TYPE_HOST_FINDING,
     indexMetadata: {
       enabled: true,
     },

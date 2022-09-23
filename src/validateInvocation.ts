@@ -109,8 +109,8 @@ export function getStepStartStates(
     [STEP_FETCH_FINDINGS]: {
       disabled: false,
     },
-    [STEP_BUILD_HOST_FINDING_RELATIONSHIP]: {
-      disabled: false,
-    },
+    // [STEP_BUILD_HOST_FINDING_RELATIONSHIP]: {
+    //   disabled: false,
+    // },
   };
 }

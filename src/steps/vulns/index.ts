@@ -2,12 +2,14 @@ import { v4 as uuid } from 'uuid';
 
 import {
   createDirectRelationship,
+  createMappedRelationship,
   Entity,
   getRawData,
   IntegrationStep,
   IntegrationStepExecutionContext,
   JobState,
   RelationshipClass,
+  RelationshipDirection,
 } from '@jupiterone/integration-sdk-core';
 
 import { createQualysAPIClient } from '../../provider';
@@ -19,31 +21,31 @@ import {
 } from '../utils';
 import {
   DATA_HOST_VULNERABILITY_FINDING_KEYS,
+  ENTITY_TYPE_HOST_FINDING,
   STEP_FETCH_SCANNED_HOST_DETAILS,
+  STEP_FETCH_SCANNED_HOST_FINDINGS,
   VmdrEntities,
 } from '../vmdr/constants';
 import { DATA_WEBAPP_VULNERABILITY_FINDING_KEYS } from '../was/constants';
 import {
-  STEP_BUILD_HOST_FINDING_RELATIONSHIP,
   STEP_FETCH_ASSESSMENTS,
   STEP_FETCH_FINDINGS,
   STEP_FETCH_FINDING_VULNS,
   VulnEntities,
+  VulnMappedRelationships,
   VulnRelationships,
 } from './constants';
 import {
   createAsessmentEntity,
-  createFindingEntity,
   createFindingVulnerabilityMappedRelationships,
   createVulnerabilityTargetEntities,
   getAssessmentKey,
-  getFindingKey,
 } from './converters';
-import { Host } from '../../provider/client/types/vmpc/listHosts';
 import { Scan } from '../../provider/client/types/vmpc/listSCANS';
 import { ScanFinding } from '../../provider/client/types/vmpc/listScanResults';
 import { getHostKey } from '../vmdr/converters';
 import { DATA_VMDR_SERVICE_ENTITY, STEP_FETCH_SERVICES } from '../services';
+import { HostAsset } from '../../provider/client/types/assets';
 
 /**
  * This is the number of vulnerabilities that must be traversed before producing
@@ -179,40 +181,43 @@ export async function fetchAssessments({
   await jobState.iterateEntities(
     { _type: VmdrEntities.HOST._type },
     async (hostEntity) => {
-      const host = getRawData<Host>(hostEntity);
+      const host = getRawData<HostAsset>(hostEntity);
 
       if (!host) logger.info(`Can't get raw data for ${hostEntity._key}`);
       else {
-        await apiClient.iterateHostScans(host.IP, async (scan) => {
-          const assessmentKey = getAssessmentKey(scan.REF);
+        await apiClient.iterateHostScans(
+          host.address as string,
+          async (scan) => {
+            const assessmentKey = getAssessmentKey(scan.REF);
 
-          const assessmentEntity = createAsessmentEntity(scan);
-          if (!(await jobState.hasKey(assessmentKey)))
-            await jobState.addEntity(assessmentEntity);
+            const assessmentEntity = createAsessmentEntity(scan);
+            if (!(await jobState.hasKey(assessmentKey)))
+              await jobState.addEntity(assessmentEntity);
 
-          await jobState.addRelationship(
-            createDirectRelationship({
-              _class: RelationshipClass.HAS,
-              from: hostEntity,
+            await jobState.addRelationship(
+              createDirectRelationship({
+                _class: RelationshipClass.HAS,
+                from: hostEntity,
+                to: assessmentEntity,
+              }),
+            );
+
+            const scannerAssessmentRelationship = createDirectRelationship({
+              _class: RelationshipClass.PERFORMED,
+              from: scannerEntity,
               to: assessmentEntity,
-            }),
-          );
+            });
 
-          const scannerAssessmentRelationship = createDirectRelationship({
-            _class: RelationshipClass.PERFORMED,
-            from: scannerEntity,
-            to: assessmentEntity,
-          });
-
-          if (!(await jobState.hasKey(scannerAssessmentRelationship._key)))
-            await jobState.addRelationship(scannerAssessmentRelationship);
-        });
+            if (!(await jobState.hasKey(scannerAssessmentRelationship._key)))
+              await jobState.addRelationship(scannerAssessmentRelationship);
+          },
+        );
       }
     },
   );
 }
 
-export async function fetchFindings({
+export async function fetchAssessmentResults({
   logger,
   instance,
   jobState,
@@ -227,20 +232,61 @@ export async function fetchFindings({
       if (!scan) logger.info(`Can't get raw data for ${assessmentEntity._key}`);
       else {
         await apiClient.iterateScanResults(scan.REF, async (finding) => {
-          const findingKey = getFindingKey(finding.qid.toString());
+          const hostKey = getHostKey(finding.ip);
+          const hostEntity = await jobState.findEntity(hostKey);
+          if (hostEntity) {
+            const host = getRawData<HostAsset>(hostEntity);
 
-          const findingEntity = createFindingEntity(finding);
-          if (!(await jobState.hasKey(findingKey)))
-            await jobState.addEntity(findingEntity);
+            if (host) {
+              const assessmentFindingRelationship = createMappedRelationship({
+                _class: RelationshipClass.IDENTIFIED,
+                _mapping: {
+                  sourceEntityKey: assessmentEntity._key,
+                  relationshipDirection: RelationshipDirection.FORWARD,
+                  targetFilterKeys: [
+                    ['_type', 'qid', 'hostId', 'port', 'protocol', 'ssl'],
+                  ],
+                  targetEntity: {
+                    _type: ENTITY_TYPE_HOST_FINDING,
+                    qid: finding.qid,
+                    port: finding.port,
+                    protocol: finding.protocol,
+                    ssl: finding.ssl === 'yes' ? 1 : 0,
+                    hostId: host.qwebHostId,
+                  },
+                  skipTargetCreation: true,
+                },
+              });
 
-          const assessmentFindingRelationship = createDirectRelationship({
-            _class: RelationshipClass.IDENTIFIED,
-            from: assessmentEntity,
-            to: findingEntity,
-          });
+              const hostFindingRelationship = createMappedRelationship({
+                _class: RelationshipClass.HAS,
+                _mapping: {
+                  sourceEntityKey: hostEntity._key,
+                  relationshipDirection: RelationshipDirection.FORWARD,
+                  targetFilterKeys: [
+                    ['_type', 'qid', 'hostId', 'port', 'protocol', 'ssl'],
+                  ],
+                  targetEntity: {
+                    _type: ENTITY_TYPE_HOST_FINDING,
+                    qid: finding.qid,
+                    port: finding.port,
+                    protocol: finding.protocol,
+                    ssl: finding.ssl === 'yes' ? 1 : 0,
+                    hostId: host.qwebHostId,
+                  },
+                  skipTargetCreation: true,
+                },
+              });
 
-          if (!(await jobState.hasKey(assessmentFindingRelationship._key)))
-            await jobState.addRelationship(assessmentFindingRelationship);
+              console.log(assessmentFindingRelationship);
+              console.log(hostFindingRelationship);
+
+              if (!(await jobState.hasKey(assessmentFindingRelationship._key)))
+                await jobState.addRelationship(assessmentFindingRelationship);
+              if (!(await jobState.hasKey(hostFindingRelationship._key)))
+                await jobState.addRelationship(hostFindingRelationship);
+            }
+          }
         });
       }
     },
@@ -339,17 +385,25 @@ export const vulnSteps: IntegrationStep<QualysIntegrationConfig>[] = [
   {
     id: STEP_FETCH_FINDINGS,
     name: 'Fetch Findings',
-    entities: [VulnEntities.FINDING],
-    relationships: [VulnRelationships.ASSESSMENT_IDENTIFIED_FINDING],
-    dependsOn: [STEP_FETCH_ASSESSMENTS],
-    executionHandler: fetchFindings,
-  },
-  {
-    id: STEP_BUILD_HOST_FINDING_RELATIONSHIP,
-    name: 'Build Host and Finding Relationship',
     entities: [],
-    relationships: [VulnRelationships.HOST_HAS_FINDING],
-    dependsOn: [STEP_FETCH_SCANNED_HOST_DETAILS, STEP_FETCH_FINDINGS],
-    executionHandler: buildHostFindingRelationship,
+    relationships: [],
+    mappedRelationships: [
+      VulnMappedRelationships.HOST_HAS_FINDING,
+      VulnMappedRelationships.ASSESSMENT_IDENTIFIED_FINDING,
+    ],
+    dependsOn: [
+      STEP_FETCH_ASSESSMENTS,
+      STEP_FETCH_SCANNED_HOST_FINDINGS,
+      STEP_FETCH_SCANNED_HOST_DETAILS,
+    ],
+    executionHandler: fetchAssessmentResults,
   },
+  // {
+  //   id: STEP_BUILD_HOST_FINDING_RELATIONSHIP,
+  //   name: 'Build Host and Finding Relationship',
+  //   entities: [],
+  //   relationships: [VulnRelationships.HOST_HAS_FINDING],
+  //   dependsOn: [STEP_FETCH_SCANNED_HOST_DETAILS, STEP_FETCH_FINDINGS],
+  //   executionHandler: buildHostFindingRelationship,
+  // },
 ];

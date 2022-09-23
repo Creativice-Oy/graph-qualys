@@ -93,51 +93,6 @@ export function createAsessmentEntity(data: Scan) {
   });
 }
 
-export function getFindingKey(id: string): string {
-  return `qualys_finding${id}`;
-}
-
-export function createFindingEntity(data: ScanFinding) {
-  return createIntegrationEntity({
-    entityData: {
-      source: data,
-      assign: {
-        _type: VulnEntities.FINDING._type,
-        _key: getFindingKey(data.qid.toString()),
-        _class: VulnEntities.FINDING._class,
-        name: data.title,
-        ip: data.ip,
-        dns: data.dns,
-        netbios: data.netbios,
-        os: data.os,
-        ipStatus: data.ip_status,
-        qid: data.qid,
-        title: data.title,
-        type: data.type,
-        severity: data.severity,
-        port: data.port,
-        protocol: data.protocol,
-        fqdn: data.fqdn,
-        ssl: data.ssl,
-        cveId: data.cve_id,
-        vendorReference: data.vendor_reference,
-        bugtraqId: data.bugtraq_id,
-        threat: data.threat,
-        impact: data.impact || undefined,
-        solution: data.solution,
-        associatedMalware: data.associated_malware,
-        results: data.results,
-        pciVuln: data.pci_vuln,
-        instance: data.instance,
-        category: data.category,
-        numericSeverity: parseInt(data.severity),
-        open: !!data.exploitability,
-        exploitability: parseInt(data.severity),
-      },
-    },
-  });
-}
-
 /**
  * Creates a set of mapped relationship target entities for each Vulnerability.
  *

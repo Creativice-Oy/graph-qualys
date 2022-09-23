@@ -560,7 +560,7 @@ export function createHostEntity(data: HostAsset) {
       source: rest,
       assign: {
         _type: VmdrEntities.HOST._type,
-        _key: getHostKey(data.id?.toString() as string),
+        _key: getHostKey(data.address?.toString() as string),
         _class: VmdrEntities.HOST._class,
         id: data.id?.toString() as string,
         name: data.name,
