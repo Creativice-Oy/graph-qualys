@@ -19,7 +19,7 @@ import {
 } from '../utils';
 import {
   DATA_HOST_VULNERABILITY_FINDING_KEYS,
-  STEP_FETCH_HOSTS,
+  STEP_FETCH_SCANNED_HOST_DETAILS,
   VmdrEntities,
 } from '../vmdr/constants';
 import { DATA_WEBAPP_VULNERABILITY_FINDING_KEYS } from '../was/constants';
@@ -333,7 +333,7 @@ export const vulnSteps: IntegrationStep<QualysIntegrationConfig>[] = [
       VulnRelationships.HOST_HAS_ASSESSMENT,
       VulnRelationships.SCANNER_PERFORMED_ASSESSMENT,
     ],
-    dependsOn: [STEP_FETCH_HOSTS, STEP_FETCH_SERVICES],
+    dependsOn: [STEP_FETCH_SCANNED_HOST_DETAILS, STEP_FETCH_SERVICES],
     executionHandler: fetchAssessments,
   },
   {
@@ -349,7 +349,7 @@ export const vulnSteps: IntegrationStep<QualysIntegrationConfig>[] = [
     name: 'Build Host and Finding Relationship',
     entities: [],
     relationships: [VulnRelationships.HOST_HAS_FINDING],
-    dependsOn: [STEP_FETCH_HOSTS, STEP_FETCH_FINDINGS],
+    dependsOn: [STEP_FETCH_SCANNED_HOST_DETAILS, STEP_FETCH_FINDINGS],
     executionHandler: buildHostFindingRelationship,
   },
 ];

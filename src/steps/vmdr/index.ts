@@ -27,7 +27,6 @@ import {
   DATA_HOST_ASSET_TARGETS,
   DATA_HOST_VULNERABILITY_FINDING_KEYS,
   DATA_SCANNED_HOST_IDS,
-  STEP_FETCH_HOSTS,
   STEP_FETCH_SCANNED_HOST_DETAILS,
   STEP_FETCH_SCANNED_HOST_FINDINGS,
   STEP_FETCH_SCANNED_HOST_IDS,
@@ -46,7 +45,7 @@ import {
   getHostAssetTargets,
 } from './converters';
 import { HostAssetTargetsMap } from './types';
-import { DATA_ACCOUNT_ENTITY, STEP_FETCH_ACCOUNT } from '../account';
+import { DATA_ACCOUNT_ENTITY } from '../account';
 
 /**
  * This is the number of pages that must be traversed before producing a more
@@ -129,6 +128,8 @@ export async function fetchScannedHostDetails({
   const vdmrServiceEntity = (await jobState.getData(
     DATA_VMDR_SERVICE_ENTITY,
   )) as Entity;
+  const accountEntity = (await jobState.getData(DATA_ACCOUNT_ENTITY)) as Entity;
+
   const apiClient = createQualysAPIClient(logger, instance.config);
 
   const errorCorrelationId = uuid();
@@ -140,6 +141,16 @@ export async function fetchScannedHostDetails({
   await apiClient.iterateHostDetails(
     hostIds,
     async (host) => {
+      const hostEntity = await jobState.addEntity(createHostEntity(host));
+
+      await jobState.addRelationship(
+        createDirectRelationship({
+          _class: RelationshipClass.HAS,
+          from: accountEntity,
+          to: hostEntity,
+        }),
+      );
+
       if (getEC2HostAssetArn(host)) {
         await jobState.addRelationship(
           createServiceScansEC2HostAssetRelationship(vdmrServiceEntity, host),
@@ -383,27 +394,6 @@ export async function fetchScannedHostFindings({
   });
 }
 
-export async function fetchHosts({
-  logger,
-  instance,
-  jobState,
-}: IntegrationStepExecutionContext<QualysIntegrationConfig>) {
-  const apiClient = createQualysAPIClient(logger, instance.config);
-  const accountEntity = (await jobState.getData(DATA_ACCOUNT_ENTITY)) as Entity;
-
-  await apiClient.iterateHosts(async (host) => {
-    const hostEntity = await jobState.addEntity(createHostEntity(host));
-
-    await jobState.addRelationship(
-      createDirectRelationship({
-        _class: RelationshipClass.HAS,
-        from: accountEntity,
-        to: hostEntity,
-      }),
-    );
-  });
-}
-
 function shouldIncludeResultsForVulnerability(
   config: CalculatedIntegrationConfig,
   detection: HostDetection,
@@ -427,13 +417,13 @@ export const hostDetectionSteps: IntegrationStep<QualysIntegrationConfig>[] = [
   {
     id: STEP_FETCH_SCANNED_HOST_DETAILS,
     name: 'Fetch Scanned Host Details',
-    entities: [],
+    entities: [VmdrEntities.HOST],
     mappedRelationships: [
       VmdrMappedRelationships.SERVICE_DISCOVERED_HOST,
       VmdrMappedRelationships.SERVICE_EC2_HOST,
       VmdrMappedRelationships.SERVICE_GCP_HOST,
     ],
-    relationships: [],
+    relationships: [VmdrRelationships.ACCOUNT_HAS_HOST],
     dependsOn: [STEP_FETCH_SERVICES, STEP_FETCH_SCANNED_HOST_IDS],
     executionHandler: fetchScannedHostDetails,
   },
@@ -449,13 +439,5 @@ export const hostDetectionSteps: IntegrationStep<QualysIntegrationConfig>[] = [
     ],
     dependsOn: [STEP_FETCH_SCANNED_HOST_DETAILS],
     executionHandler: fetchScannedHostFindings,
-  },
-  {
-    id: STEP_FETCH_HOSTS,
-    name: 'Fetch Hosts',
-    entities: [VmdrEntities.HOST],
-    relationships: [VmdrRelationships.ACCOUNT_HAS_HOST],
-    dependsOn: [STEP_FETCH_ACCOUNT],
-    executionHandler: fetchHosts,
   },
 ];

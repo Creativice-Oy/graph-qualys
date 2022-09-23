@@ -10,7 +10,6 @@ import { ENTITY_TYPE_QUALYS_ACCOUNT } from '../account';
 
 import { ENTITY_TYPE_SERVICE_VMDR } from '../services';
 
-export const STEP_FETCH_HOSTS = 'fetch-hosts';
 export const STEP_FETCH_SCANNED_HOST_IDS = 'fetch-scanned-host-ids';
 export const STEP_FETCH_SCANNED_HOST_DETAILS = 'fetch-scanned-host-details';
 export const STEP_FETCH_SCANNED_HOST_FINDINGS = 'fetch-scanned-host-detections';
