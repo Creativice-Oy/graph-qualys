@@ -10,7 +10,6 @@ import {
 } from '@jupiterone/integration-sdk-core';
 
 import { vmpc } from '../../provider/client';
-import { ScanFinding } from '../../provider/client/types/vmpc/listScanResults';
 import { Scan } from '../../provider/client/types/vmpc/listScans';
 import { CveList } from '../../provider/client/types/vmpc/listVulnerabilities';
 import { ENTITY_TYPE_HOST_FINDING } from '../vmdr/constants';

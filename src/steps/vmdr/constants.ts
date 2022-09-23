@@ -63,14 +63,6 @@ export const VmdrEntities: Record<string, StepEntityMetadata> = {
       enabled: true,
     },
   },
-  FINDING: {
-    _type: `qualys_finding`,
-    _class: ['Finding'],
-    resourceName: 'Finding',
-    indexMetadata: {
-      enabled: true,
-    },
-  },
 };
 
 export const MAPPED_RELATIONSHIP_TYPE_HOST_IS_HOST = generateRelationshipType(

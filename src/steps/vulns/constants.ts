@@ -59,14 +59,6 @@ export const VulnEntities: Record<string, StepEntityMetadata> = {
       enabled: true,
     },
   },
-  FINDING: {
-    _type: `qualys_finding`,
-    _class: ['Finding'],
-    resourceName: 'Finding',
-    indexMetadata: {
-      enabled: true,
-    },
-  },
 };
 
 export const VulnRelationships: Record<string, StepRelationshipMetadata> = {

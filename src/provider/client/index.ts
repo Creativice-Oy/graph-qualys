@@ -40,7 +40,6 @@ import {
   toArray,
 } from './util';
 import { buildServiceRequestBody } from './was/util';
-import { Host, HostResponse } from './types/vmpc/listHosts';
 import { Scan, ScanResponse } from './types/vmpc/listSCANS';
 import { ScanFinding, ScanResult } from './types/vmpc/listScanResults';
 
@@ -640,26 +639,6 @@ export class QualysAPIClient {
 
       hostIdsResponse = await buildHostIdsResponse(response);
       await iteratee(hostIdsResponse.hostIds);
-    }
-  }
-
-  public async iterateHosts(iteratee: ResourceIteratee<Host>): Promise<void> {
-    const endpoint = '/api/2.0/fo/asset/host/';
-    const response = await this.executeAuthenticatedAPIRequest(
-      this.qualysUrl(endpoint, {
-        action: 'list',
-        details: 'All',
-        truncation_limit: DEFAULT_HOST_IDS_PAGE_SIZE,
-      }),
-      { method: 'GET' },
-    );
-
-    const results = await parseXMLResponse<HostResponse>(response);
-    if (results.HOST_LIST_OUTPUT?.RESPONSE?.HOST_LIST) {
-      const hostList = results.HOST_LIST_OUTPUT?.RESPONSE?.HOST_LIST.HOST;
-      if (Array.isArray(hostList))
-        for (const host of hostList) await iteratee(host);
-      else await iteratee(hostList);
     }
   }
 

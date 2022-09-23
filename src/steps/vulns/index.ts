@@ -398,12 +398,4 @@ export const vulnSteps: IntegrationStep<QualysIntegrationConfig>[] = [
     ],
     executionHandler: fetchAssessmentResults,
   },
-  // {
-  //   id: STEP_BUILD_HOST_FINDING_RELATIONSHIP,
-  //   name: 'Build Host and Finding Relationship',
-  //   entities: [],
-  //   relationships: [VulnRelationships.HOST_HAS_FINDING],
-  //   dependsOn: [STEP_FETCH_SCANNED_HOST_DETAILS, STEP_FETCH_FINDINGS],
-  //   executionHandler: buildHostFindingRelationship,
-  // },
 ];
