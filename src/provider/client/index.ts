@@ -42,6 +42,7 @@ import {
 import { buildServiceRequestBody } from './was/util';
 import { Scan, ScanResponse } from './types/vmpc/listSCANS';
 import { ScanFinding, ScanResult } from './types/vmpc/listScanResults';
+import { format, subYears } from 'date-fns';
 
 export * from './types';
 
@@ -650,8 +651,9 @@ export class QualysAPIClient {
     const response = await this.executeAuthenticatedAPIRequest(
       this.qualysUrl(endpoint, {
         action: 'list',
-        launched_before_datetime: '2022-09-19',
-        launched_after_datetime: '2021-09-19',
+        // 1 yr interval from today
+        launched_before_datetime: format(new Date(), 'yyyy-MM-dd'),
+        launched_after_datetime: format(subYears(new Date(), 1), 'yyyy-MM-dd'),
         target,
       }),
       { method: 'GET' },

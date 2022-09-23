@@ -278,9 +278,6 @@ export async function fetchAssessmentResults({
                 },
               });
 
-              console.log(assessmentFindingRelationship);
-              console.log(hostFindingRelationship);
-
               if (!(await jobState.hasKey(assessmentFindingRelationship._key)))
                 await jobState.addRelationship(assessmentFindingRelationship);
               if (!(await jobState.hasKey(hostFindingRelationship._key)))
