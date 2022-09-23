@@ -26,9 +26,9 @@ import {
   ENTITY_TYPE_EC2_HOST,
   ENTITY_TYPE_GCP_HOST,
   ENTITY_TYPE_HOST_FINDING,
-  MAPPED_RELATIONSHIP_TYPE_VDMR_DISCOVERED_HOST,
-  MAPPED_RELATIONSHIP_TYPE_VDMR_EC2_HOST,
-  MAPPED_RELATIONSHIP_TYPE_VDMR_GCP_HOST,
+  MAPPED_RELATIONSHIP_TYPE_HOST_IS_HOST,
+  MAPPED_RELATIONSHIP_TYPE_HOST_IS_EC2_HOST,
+  MAPPED_RELATIONSHIP_TYPE_HOST_IS_GCP_HOST,
   VmdrEntities,
 } from './constants';
 import { HostAssetTargets } from './types';
@@ -38,21 +38,21 @@ import { HostAsset } from '../../provider/client/types/assets';
  * Creates a mapped relationship between a Service and Host. This should not be
  * used when the target is known to be an EC2 Host.
  *
- * @see createServiceScansEC2HostAssetRelationship
+ * @see createHostIsEC2HostAssetRelationship
  *
- * @param serviceEntity the Service that provides scanning of the host
+ * @param serviceEntity the host
  * @param host a HostAsset that is scanned by the Service
  */
-export function createServiceScansDiscoveredHostAssetRelationship(
-  serviceEntity: Entity,
+export function createHostIsDiscoveredHostAssetRelationship(
+  hostEntity: Entity,
   host: assets.HostAsset,
 ): Relationship {
   return createMappedRelationship({
-    _class: RelationshipClass.SCANS,
+    _class: RelationshipClass.IS,
     // TODO require _type https://github.com/JupiterOne/sdk/issues/347
-    _type: MAPPED_RELATIONSHIP_TYPE_VDMR_DISCOVERED_HOST,
+    _type: MAPPED_RELATIONSHIP_TYPE_HOST_IS_HOST,
     _mapping: {
-      sourceEntityKey: serviceEntity._key,
+      sourceEntityKey: hostEntity._key,
       relationshipDirection: RelationshipDirection.FORWARD,
       /**
        * The primary value of this mapped relationship is to contribute details
@@ -76,27 +76,27 @@ export function createServiceScansDiscoveredHostAssetRelationship(
  * existing EC2 Host entities and, when they don't already exist, allows the AWS
  * integration to adopt the placeholder entity.
  *
- * @see createServiceScansDiscoveredHostAssetRelationship
+ * @see createHostIsDiscoveredHostAssetRelationship
  *
- * @param serviceEntity the Service that provides scanning of the host
+ * @param hostEntity the host
  * @param host a HostAsset that is scanned by the Service
  */
-export function createServiceScansEC2HostAssetRelationship(
-  serviceEntity: Entity,
+export function createHostIsEC2HostAssetRelationship(
+  hostEntity: Entity,
   host: assets.HostAsset,
 ): Relationship {
   return createMappedRelationship({
     // Ensure unique key based on host identity, not EC2 ARN.
     _key: generateRelationshipKey(
-      RelationshipClass.SCANS,
-      serviceEntity,
+      RelationshipClass.IS,
+      hostEntity,
       generateHostAssetKey(host),
     ),
-    _class: RelationshipClass.SCANS,
+    _class: RelationshipClass.IS,
     // TODO require _type https://github.com/JupiterOne/sdk/issues/347
-    _type: MAPPED_RELATIONSHIP_TYPE_VDMR_EC2_HOST,
+    _type: MAPPED_RELATIONSHIP_TYPE_HOST_IS_EC2_HOST,
     _mapping: {
-      sourceEntityKey: serviceEntity._key,
+      sourceEntityKey: hostEntity._key,
       relationshipDirection: RelationshipDirection.FORWARD,
       targetFilterKeys: [['_type', '_key']],
       targetEntity: createEC2HostAssetTargetEntity(host),
@@ -111,27 +111,27 @@ export function createServiceScansEC2HostAssetRelationship(
  * existing GCP Host entities and, when they don't already exist, allows the GCP
  * integration to adopt the placeholder entity.
  *
- * @see createServiceScansDiscoveredHostAssetRelationship
+ * @see createHostIsDiscoveredHostAssetRelationship
  *
- * @param serviceEntity the Service that provides scanning of the host
+ * @param hostEntity the host
  * @param host a HostAsset that is scanned by the Service
  */
-export function createServiceScansGCPHostAssetRelationship(
-  serviceEntity: Entity,
+export function createHostIsGCPHostAssetRelationship(
+  hostEntity: Entity,
   host: assets.HostAsset,
 ): Relationship {
   return createMappedRelationship({
     // Ensure unique key based on host identity, not GCP selfLink.
     _key: generateRelationshipKey(
-      RelationshipClass.SCANS,
-      serviceEntity,
+      RelationshipClass.IS,
+      hostEntity,
       generateHostAssetKey(host),
     ),
-    _class: RelationshipClass.SCANS,
+    _class: RelationshipClass.IS,
     // TODO require _type https://github.com/JupiterOne/sdk/issues/347
-    _type: MAPPED_RELATIONSHIP_TYPE_VDMR_GCP_HOST,
+    _type: MAPPED_RELATIONSHIP_TYPE_HOST_IS_GCP_HOST,
     _mapping: {
-      sourceEntityKey: serviceEntity._key,
+      sourceEntityKey: hostEntity._key,
       relationshipDirection: RelationshipDirection.FORWARD,
       targetFilterKeys: [['_type', '_key']],
       targetEntity: createGCPHostAssetTargetEntity(host),

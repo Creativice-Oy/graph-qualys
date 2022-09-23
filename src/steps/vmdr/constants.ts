@@ -37,23 +37,6 @@ export const RELATIONSHIP_TYPE_SERVICE_HOST_FINDING = generateRelationshipType(
   ENTITY_TYPE_HOST_FINDING,
 );
 
-export const MAPPED_RELATIONSHIP_TYPE_VDMR_DISCOVERED_HOST = generateRelationshipType(
-  RelationshipClass.SCANS,
-  ENTITY_TYPE_SERVICE_VMDR,
-  ENTITY_TYPE_DISCOVERED_HOST,
-);
-export const MAPPED_RELATIONSHIP_TYPE_VDMR_EC2_HOST = generateRelationshipType(
-  RelationshipClass.SCANS,
-  ENTITY_TYPE_SERVICE_VMDR,
-  ENTITY_TYPE_EC2_HOST,
-);
-
-export const MAPPED_RELATIONSHIP_TYPE_VDMR_GCP_HOST = generateRelationshipType(
-  RelationshipClass.SCANS,
-  ENTITY_TYPE_SERVICE_VMDR,
-  ENTITY_TYPE_GCP_HOST,
-);
-
 export const VmdrEntities: Record<string, StepEntityMetadata> = {
   HOST_FINDING: {
     _type: ENTITY_TYPE_HOST_FINDING,
@@ -90,6 +73,23 @@ export const VmdrEntities: Record<string, StepEntityMetadata> = {
   },
 };
 
+export const MAPPED_RELATIONSHIP_TYPE_HOST_IS_HOST = generateRelationshipType(
+  RelationshipClass.IS,
+  VmdrEntities.HOST._type,
+  ENTITY_TYPE_DISCOVERED_HOST,
+);
+export const MAPPED_RELATIONSHIP_TYPE_HOST_IS_EC2_HOST = generateRelationshipType(
+  RelationshipClass.IS,
+  VmdrEntities.HOST._type,
+  ENTITY_TYPE_EC2_HOST,
+);
+
+export const MAPPED_RELATIONSHIP_TYPE_HOST_IS_GCP_HOST = generateRelationshipType(
+  RelationshipClass.IS,
+  VmdrEntities.HOST._type,
+  ENTITY_TYPE_GCP_HOST,
+);
+
 export const VmdrRelationships: Record<string, StepRelationshipMetadata> = {
   SERVICE_HOST_FINDING: {
     _type: RELATIONSHIP_TYPE_SERVICE_HOST_FINDING,
@@ -116,10 +116,10 @@ export const VmdrMappedRelationships: Record<
   string,
   StepMappedRelationshipMetadata
 > = {
-  SERVICE_DISCOVERED_HOST: {
-    _type: MAPPED_RELATIONSHIP_TYPE_VDMR_DISCOVERED_HOST,
-    _class: RelationshipClass.SCANS,
-    sourceType: ENTITY_TYPE_SERVICE_VMDR,
+  HOST_IS_HOST: {
+    _type: MAPPED_RELATIONSHIP_TYPE_HOST_IS_HOST,
+    _class: RelationshipClass.IS,
+    sourceType: VmdrEntities.HOST._type,
     direction: RelationshipDirection.FORWARD,
     targetType: ENTITY_TYPE_DISCOVERED_HOST,
     partial: true,
@@ -127,10 +127,10 @@ export const VmdrMappedRelationships: Record<
       enabled: true,
     },
   },
-  SERVICE_EC2_HOST: {
-    _type: MAPPED_RELATIONSHIP_TYPE_VDMR_EC2_HOST,
-    _class: RelationshipClass.SCANS,
-    sourceType: ENTITY_TYPE_SERVICE_VMDR,
+  HOST_EC2_HOST: {
+    _type: MAPPED_RELATIONSHIP_TYPE_HOST_IS_EC2_HOST,
+    _class: RelationshipClass.IS,
+    sourceType: VmdrEntities.HOST._type,
     direction: RelationshipDirection.FORWARD,
     targetType: ENTITY_TYPE_EC2_HOST,
     partial: true,
@@ -138,10 +138,10 @@ export const VmdrMappedRelationships: Record<
       enabled: true,
     },
   },
-  SERVICE_GCP_HOST: {
-    _type: MAPPED_RELATIONSHIP_TYPE_VDMR_GCP_HOST,
-    _class: RelationshipClass.SCANS,
-    sourceType: ENTITY_TYPE_SERVICE_VMDR,
+  HOST_GCP_HOST: {
+    _type: MAPPED_RELATIONSHIP_TYPE_HOST_IS_GCP_HOST,
+    _class: RelationshipClass.IS,
+    sourceType: VmdrEntities.HOST._type,
     direction: RelationshipDirection.FORWARD,
     targetType: ENTITY_TYPE_GCP_HOST,
     partial: true,

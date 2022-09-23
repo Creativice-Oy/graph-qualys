@@ -156,11 +156,11 @@ The following relationships are created:
 
 The following mapped relationships are created:
 
-| Source Entity `_type`          | Relationship `_class` | Target Entity `_type`       | Direction |
-| ------------------------------ | --------------------- | --------------------------- | --------- |
-| `qualys_vulnerability_manager` | **SCANS**             | `*aws_instance*`            | FORWARD   |
-| `qualys_vulnerability_manager` | **SCANS**             | `*discovered_host*`         | FORWARD   |
-| `qualys_vulnerability_manager` | **SCANS**             | `*google_compute_instance*` | FORWARD   |
+| Source Entity `_type` | Relationship `_class` | Target Entity `_type`       | Direction |
+| --------------------- | --------------------- | --------------------------- | --------- |
+| `qualys_host`         | **IS**                | `*aws_instance*`            | FORWARD   |
+| `qualys_host`         | **IS**                | `*discovered_host*`         | FORWARD   |
+| `qualys_host`         | **IS**                | `*google_compute_instance*` | FORWARD   |
 
 <!--
 ********************************************************************************
