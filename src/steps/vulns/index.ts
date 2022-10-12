@@ -41,7 +41,7 @@ import {
   createVulnerabilityTargetEntities,
   getAssessmentKey,
 } from './converters';
-import { Scan } from '../../provider/client/types/vmpc/listSCANS';
+import { Scan } from '../../provider/client/types/vmpc/listScans';
 import { ScanFinding } from '../../provider/client/types/vmpc/listScanResults';
 import { getHostKey } from '../vmdr/converters';
 import { DATA_VMDR_SERVICE_ENTITY, STEP_FETCH_SERVICES } from '../services';

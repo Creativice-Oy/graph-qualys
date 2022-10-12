@@ -254,12 +254,14 @@ export function createHostFindingEntity({
   detection,
   detectionResults,
   hostAssetTargets,
+  tags,
 }: {
   key: string;
   host: vmpc.DetectionHost;
   detection: vmpc.HostDetection;
   detectionResults: string | undefined;
   hostAssetTargets: HostAssetTargets | undefined;
+  tags: string[];
 }): Entity {
   const findingDisplayName = `QID ${detection.QID}`;
 
@@ -327,6 +329,9 @@ export function createHostFindingEntity({
         // TODO: These are required but not sure what values to use
         production: true,
         public: true,
+
+        // Add Host tags to Host Finding
+        tags,
       },
     },
   });

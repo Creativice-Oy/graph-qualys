@@ -364,6 +364,7 @@ describe('createHostFindingEntity', () => {
             detection: hostDetection,
             detectionResults: undefined,
             hostAssetTargets: hostTargets,
+            tags: ['testTag1', 'test2'],
           }),
         ).toMatchGraphObjectSchema({
           _class: ['Finding'],
@@ -383,6 +384,10 @@ describe('createHostFindingEntity', () => {
               },
               awsAccountId: {
                 const: '1234',
+              },
+              tags: {
+                type: 'array',
+                items: { type: 'string' },
               },
             },
             required: ['id'],

@@ -40,7 +40,7 @@ import {
   toArray,
 } from './util';
 import { buildServiceRequestBody } from './was/util';
-import { Scan, ScanResponse } from './types/vmpc/listSCANS';
+import { Scan, ScanResponse } from './types/vmpc/listScans';
 import { ScanFinding, ScanResult } from './types/vmpc/listScanResults';
 import { format, subYears } from 'date-fns';
 

@@ -4,6 +4,7 @@ import { v4 as uuid } from 'uuid';
 import {
   createDirectRelationship,
   Entity,
+  getRawData,
   IntegrationInfoEventName,
   IntegrationStep,
   IntegrationStepExecutionContext,
@@ -42,10 +43,13 @@ import {
   createHostIsGCPHostAssetRelationship,
   getEC2HostAssetArn,
   getGCPHostProjectId,
+  getHostAssetTags,
   getHostAssetTargets,
+  getHostKey,
 } from './converters';
 import { HostAssetTargetsMap } from './types';
 import { DATA_ACCOUNT_ENTITY } from '../account';
+import { HostAsset } from '../../provider/client/types/assets';
 
 /**
  * This is the number of pages that must be traversed before producing a more
@@ -237,6 +241,20 @@ export async function fetchScannedHostFindings({
     hostIds,
     async ({ host, detections }) => {
       let numBadQids = 0;
+      const hostEntity = await jobState.findEntity(getHostKey(host.IP || ''));
+      let tags: string[] = [];
+
+      if (hostEntity) {
+        const host = getRawData<HostAsset>(hostEntity);
+        if (host) {
+          tags = getHostAssetTags(host);
+        }
+      } else {
+        logger.warn(
+          { _key: getHostKey(host.IP || '') },
+          'Could not find Host Entity',
+        );
+      }
 
       // TODO: consider having jobState.batch(detections, ([detection, ...]) => {...})
       // so that we don't have to know what the optimal batch size is
@@ -290,6 +308,7 @@ export async function fetchScannedHostFindings({
               ? detection.RESULTS?.substring(0, 300)
               : undefined,
             hostAssetTargets: hostAssetTargetsMap[host.ID!],
+            tags,
           });
           entities.push(findingEntity);
 
