@@ -13,7 +13,11 @@ import {
   STEP_FETCH_SCANNED_HOST_FINDINGS,
   STEP_FETCH_SCANNED_HOST_IDS,
 } from './steps/vmdr/constants';
-import { STEP_FETCH_FINDING_VULNS } from './steps/vulns/constants';
+import {
+  STEP_FETCH_ASSESSMENTS,
+  STEP_FETCH_FINDINGS,
+  STEP_FETCH_FINDING_VULNS,
+} from './steps/vulns/constants';
 import {
   STEP_FETCH_SCANNED_WEBAPPS,
   STEP_FETCH_SCANNED_WEBAPP_FINDINGS,
@@ -98,5 +102,14 @@ export function getStepStartStates(
     [STEP_FETCH_FINDING_VULNS]: {
       disabled: false,
     },
+    [STEP_FETCH_ASSESSMENTS]: {
+      disabled: false,
+    },
+    [STEP_FETCH_FINDINGS]: {
+      disabled: false,
+    },
+    // [STEP_BUILD_HOST_FINDING_RELATIONSHIP]: {
+    //   disabled: false,
+    // },
   };
 }

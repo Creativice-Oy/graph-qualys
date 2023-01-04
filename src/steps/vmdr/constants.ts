@@ -6,6 +6,7 @@ import {
   StepMappedRelationshipMetadata,
   StepRelationshipMetadata,
 } from '@jupiterone/integration-sdk-core';
+import { ENTITY_TYPE_QUALYS_ACCOUNT } from '../account';
 
 import { ENTITY_TYPE_SERVICE_VMDR } from '../services';
 
@@ -36,23 +37,6 @@ export const RELATIONSHIP_TYPE_SERVICE_HOST_FINDING = generateRelationshipType(
   ENTITY_TYPE_HOST_FINDING,
 );
 
-export const MAPPED_RELATIONSHIP_TYPE_VDMR_DISCOVERED_HOST = generateRelationshipType(
-  RelationshipClass.SCANS,
-  ENTITY_TYPE_SERVICE_VMDR,
-  ENTITY_TYPE_DISCOVERED_HOST,
-);
-export const MAPPED_RELATIONSHIP_TYPE_VDMR_EC2_HOST = generateRelationshipType(
-  RelationshipClass.SCANS,
-  ENTITY_TYPE_SERVICE_VMDR,
-  ENTITY_TYPE_EC2_HOST,
-);
-
-export const MAPPED_RELATIONSHIP_TYPE_VDMR_GCP_HOST = generateRelationshipType(
-  RelationshipClass.SCANS,
-  ENTITY_TYPE_SERVICE_VMDR,
-  ENTITY_TYPE_GCP_HOST,
-);
-
 export const VmdrEntities: Record<string, StepEntityMetadata> = {
   HOST_FINDING: {
     _type: ENTITY_TYPE_HOST_FINDING,
@@ -60,10 +44,43 @@ export const VmdrEntities: Record<string, StepEntityMetadata> = {
     resourceName: 'Host Detection',
     partial: true,
     indexMetadata: {
-      enabled: false,
+      enabled: true,
+    },
+  },
+  HOST: {
+    _type: `qualys_host`,
+    _class: ['Host'],
+    resourceName: 'Host',
+    indexMetadata: {
+      enabled: true,
+    },
+  },
+  ASSESSMENT: {
+    _type: `qualys_assessment`,
+    _class: ['Assessment'],
+    resourceName: 'Assessment',
+    indexMetadata: {
+      enabled: true,
     },
   },
 };
+
+export const MAPPED_RELATIONSHIP_TYPE_HOST_IS_HOST = generateRelationshipType(
+  RelationshipClass.IS,
+  VmdrEntities.HOST._type,
+  ENTITY_TYPE_DISCOVERED_HOST,
+);
+export const MAPPED_RELATIONSHIP_TYPE_HOST_IS_EC2_HOST = generateRelationshipType(
+  RelationshipClass.IS,
+  VmdrEntities.HOST._type,
+  ENTITY_TYPE_EC2_HOST,
+);
+
+export const MAPPED_RELATIONSHIP_TYPE_HOST_IS_GCP_HOST = generateRelationshipType(
+  RelationshipClass.IS,
+  VmdrEntities.HOST._type,
+  ENTITY_TYPE_GCP_HOST,
+);
 
 export const VmdrRelationships: Record<string, StepRelationshipMetadata> = {
   SERVICE_HOST_FINDING: {
@@ -73,7 +90,16 @@ export const VmdrRelationships: Record<string, StepRelationshipMetadata> = {
     targetType: ENTITY_TYPE_HOST_FINDING,
     partial: true,
     indexMetadata: {
-      enabled: false,
+      enabled: true,
+    },
+  },
+  ACCOUNT_HAS_HOST: {
+    _type: `qualys_account_has_host`,
+    _class: RelationshipClass.HAS,
+    sourceType: ENTITY_TYPE_QUALYS_ACCOUNT,
+    targetType: VmdrEntities.HOST._type,
+    indexMetadata: {
+      enabled: true,
     },
   },
 };
@@ -82,37 +108,37 @@ export const VmdrMappedRelationships: Record<
   string,
   StepMappedRelationshipMetadata
 > = {
-  SERVICE_DISCOVERED_HOST: {
-    _type: MAPPED_RELATIONSHIP_TYPE_VDMR_DISCOVERED_HOST,
-    _class: RelationshipClass.SCANS,
-    sourceType: ENTITY_TYPE_SERVICE_VMDR,
+  HOST_IS_HOST: {
+    _type: MAPPED_RELATIONSHIP_TYPE_HOST_IS_HOST,
+    _class: RelationshipClass.IS,
+    sourceType: VmdrEntities.HOST._type,
     direction: RelationshipDirection.FORWARD,
     targetType: ENTITY_TYPE_DISCOVERED_HOST,
     partial: true,
     indexMetadata: {
-      enabled: false,
+      enabled: true,
     },
   },
-  SERVICE_EC2_HOST: {
-    _type: MAPPED_RELATIONSHIP_TYPE_VDMR_EC2_HOST,
-    _class: RelationshipClass.SCANS,
-    sourceType: ENTITY_TYPE_SERVICE_VMDR,
+  HOST_EC2_HOST: {
+    _type: MAPPED_RELATIONSHIP_TYPE_HOST_IS_EC2_HOST,
+    _class: RelationshipClass.IS,
+    sourceType: VmdrEntities.HOST._type,
     direction: RelationshipDirection.FORWARD,
     targetType: ENTITY_TYPE_EC2_HOST,
     partial: true,
     indexMetadata: {
-      enabled: false,
+      enabled: true,
     },
   },
-  SERVICE_GCP_HOST: {
-    _type: MAPPED_RELATIONSHIP_TYPE_VDMR_GCP_HOST,
-    _class: RelationshipClass.SCANS,
-    sourceType: ENTITY_TYPE_SERVICE_VMDR,
+  HOST_GCP_HOST: {
+    _type: MAPPED_RELATIONSHIP_TYPE_HOST_IS_GCP_HOST,
+    _class: RelationshipClass.IS,
+    sourceType: VmdrEntities.HOST._type,
     direction: RelationshipDirection.FORWARD,
     targetType: ENTITY_TYPE_GCP_HOST,
     partial: true,
     indexMetadata: {
-      enabled: false,
+      enabled: true,
     },
   },
 };

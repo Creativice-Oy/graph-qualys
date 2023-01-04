@@ -40,6 +40,9 @@ import {
   toArray,
 } from './util';
 import { buildServiceRequestBody } from './was/util';
+import { Scan, ScanResponse } from './types/vmpc/listSCANS';
+import { ScanFinding, ScanResult } from './types/vmpc/listScanResults';
+import { format, subYears } from 'date-fns';
 
 export * from './types';
 
@@ -638,6 +641,52 @@ export class QualysAPIClient {
       hostIdsResponse = await buildHostIdsResponse(response);
       await iteratee(hostIdsResponse.hostIds);
     }
+  }
+
+  public async iterateHostScans(
+    target: string,
+    iteratee: ResourceIteratee<Scan>,
+  ): Promise<void> {
+    const endpoint = '/api/2.0/fo/scan/';
+    const response = await this.executeAuthenticatedAPIRequest(
+      this.qualysUrl(endpoint, {
+        action: 'list',
+        // 1 yr interval from today
+        launched_before_datetime: format(new Date(), 'yyyy-MM-dd'),
+        launched_after_datetime: format(subYears(new Date(), 1), 'yyyy-MM-dd'),
+        target,
+      }),
+      { method: 'GET' },
+    );
+
+    const results = await parseXMLResponse<ScanResponse>(response);
+    if (results.SCAN_LIST_OUTPUT?.RESPONSE?.SCAN_LIST) {
+      const scanList = results.SCAN_LIST_OUTPUT.RESPONSE.SCAN_LIST.SCAN;
+      if (Array.isArray(scanList))
+        for (const scan of scanList) await iteratee(scan);
+      else await iteratee(scanList);
+    }
+  }
+
+  public async iterateScanResults(
+    scanRef: string,
+    iteratee: ResourceIteratee<ScanFinding>,
+  ): Promise<void> {
+    const endpoint = '/api/2.0/fo/scan/';
+    const response = await this.executeAuthenticatedAPIRequest(
+      this.qualysUrl(endpoint, {
+        action: 'fetch',
+        scan_ref: scanRef,
+        output_format: 'json_extended',
+        mode: 'brief',
+      }),
+      { method: 'GET' },
+    );
+
+    const results: ScanResult = await response.json();
+    for (const result of results)
+      if (Object.keys(result).includes('results'))
+        await iteratee(result as ScanFinding);
   }
 
   /**

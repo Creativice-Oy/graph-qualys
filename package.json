@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@lifeomic/attempt": "^3.0.3",
+    "date-fns": "^2.29.3",
     "fast-xml-parser": "^3.16.0",
     "lodash": "^4.17.20",
     "node-fetch": "^2.6.1",

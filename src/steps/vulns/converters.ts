@@ -1,18 +1,22 @@
 import {
+  createIntegrationEntity,
   createMappedRelationship,
   generateRelationshipType,
   MappedRelationship,
+  parseTimePropertyValue,
   RelationshipClass,
   RelationshipDirection,
   TargetEntityProperties,
 } from '@jupiterone/integration-sdk-core';
 
 import { vmpc } from '../../provider/client';
+import { Scan } from '../../provider/client/types/vmpc/listScans';
 import { CveList } from '../../provider/client/types/vmpc/listVulnerabilities';
 import { ENTITY_TYPE_HOST_FINDING } from '../vmdr/constants';
 import {
   // ENTITY_TYPE_CVE_VULNERABILITY,
   ENTITY_TYPE_QUALYS_VULNERABILITY,
+  VulnEntities,
 } from './constants';
 
 /**
@@ -56,6 +60,36 @@ export function createFindingVulnerabilityMappedRelationships(
     seenRelationshipKeys.add(relationship._key);
   }
   return { relationships, duplicates };
+}
+
+export function getAssessmentKey(id: string): string {
+  return `qualys_assessment:${id}`;
+}
+
+export function createAsessmentEntity(data: Scan) {
+  return createIntegrationEntity({
+    entityData: {
+      source: data,
+      assign: {
+        _type: VulnEntities.ASSESSMENT._type,
+        _key: getAssessmentKey(data.REF),
+        _class: VulnEntities.ASSESSMENT._class,
+        ref: data.REF,
+        type: data.TYPE,
+        name: data.TITLE,
+        userLogin: data.USER_LOGIN,
+        launchDatetime: parseTimePropertyValue(data.LAUNCH_DATETIME),
+        duration: data.DURATION,
+        processingPriority: data.PROCESSING_PRIORITY,
+        processed: data.PROCESSED,
+        statusState: data.STATUS.STATE,
+        target: data.TARGET,
+        category: 'Vulnerability Scan',
+        summary: data.TITLE,
+        internal: true,
+      },
+    },
+  });
 }
 
 /**
